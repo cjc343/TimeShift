@@ -1,20 +1,20 @@
 package tazzernator.cjc.timeshift;
 
-import org.bukkit.Server;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerListener;
 import org.bukkit.event.player.PlayerChatEvent;
 
 public class TimeShiftPlayerListener extends PlayerListener {
-	private Server server;
+	private TimeShift plugin;
 
-	public TimeShiftPlayerListener(TimeShift instance, Server server) {
-		this.server = server;
+	
+	public TimeShiftPlayerListener(TimeShift instance) {
+		this.plugin = instance;
 	}
 	
 	private void setSetting(int setting, Player player) {
-		World w = server.getWorld(player.getWorld().getName());
+		World w = plugin.getServer().getWorld(player.getWorld().getName());
 		TimeShift.settings.put(w.getName(), setting);
 	}
 	
@@ -26,7 +26,7 @@ public class TimeShiftPlayerListener extends PlayerListener {
 			// time command cancels an active shift only
 			// check for permission to (cancel a) shift
 			if (TimeShift.Permissions != null) {
-				if (!TimeShift.Permissions.has(player, "timeshift.shift")) {
+				if (!TimeShift.Permissions.has(player, TimeShiftCommandParser.cmdPerm)) {
 					return;
 				}
 			}		
@@ -35,7 +35,7 @@ public class TimeShiftPlayerListener extends PlayerListener {
 				// TST should fix before it is ever an issue?
 				if (TimeShift.settings.get(w.getName()) != -1) {
 					setSetting(-1, player);
-					server.broadcastMessage("Time appears to be back to normal...");
+					plugin.getServer().broadcastMessage("Time appears to be back to normal...");
 				}
 			} catch (ArrayIndexOutOfBoundsException e) {
 				System.out.println(TimeShift.name + " had a minor error with the /time command. Please report.");

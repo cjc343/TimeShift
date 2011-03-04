@@ -9,25 +9,54 @@ import org.bukkit.Server;
 import org.bukkit.World;
 
 public class TimeShiftCommandParser  { //extends PlayerListener
-	private Server server;
 	private TimeShift instance;
+	//show up in a lot of places. Actual string only shows up here. Some places still need adjustment
+	private final String cmd = "shift";
+	public static final String cmdPerm = "timeshift.shift"; // currently used in Player Listener
+	private final String cmdStart = "timeshift.startup";
 	ArrayList<String> data = new ArrayList<String>();
 
 	
-	public TimeShiftCommandParser(TimeShift instance, Server server) {
-		this.server = server;
+	public TimeShiftCommandParser(TimeShift instance) {
 		this.instance = instance;
 	}
 
+	private void setSetting(int setting, Player player, String[] split) {
+		if (split.length > 1){
+			for (int i = 1; i < split.length; i++) {
+				setSettingByName(setting,split[i]);
+			}
+		} else {
+			setSettingPlayer(setting,player);
+		}
+	}
 	
 	// changes one of the servers in memory.
-	private void setSetting(int setting, Player player) {
-		World w = server.getWorld(player.getWorld().getName());
+	private void setSettingPlayer(int setting, Player player) {
+		World w = instance.getServer().getWorld(player.getWorld().getName());
 		//if the previous value at key was null, the world never got a timer.
 		if (TimeShift.settings.put(w.getName(), setting) == null) {
 			instance.scheduleTimer(w);
 		}
 	}
+	
+	
+	//same, by worldname instead of by player.
+	private Boolean setSettingByName(int setting, String world) {
+		World w = this.instance.getServer().getWorld(world);
+		if (w == null) {
+			return false;
+		} else {
+			// if the previous value at key was null, the world never got a
+			// timer.
+			if (TimeShift.settings.put(w.getName(), setting) == null) {
+				instance.scheduleTimer(w);
+			}
+			return true;
+		}
+	}
+	
+
 
 	
 	//checks if a player has permission to use permission.
@@ -41,7 +70,7 @@ public class TimeShiftCommandParser  { //extends PlayerListener
 	}
 	
 	public boolean checkShift(Player player){
-		if (!checkPermissions(player, "timeshift.shift")) {
+		if (!checkPermissions(player, cmdPerm)) {
 			return false;	
 		}
 		return true;
@@ -49,14 +78,14 @@ public class TimeShiftCommandParser  { //extends PlayerListener
 	
 	private boolean checkShiftError(Player player) {
 		if (!checkShift(player)) {
-			player.sendMessage("You need timeshift.shift permission.");
+			player.sendMessage("You need " + cmdPerm + " permission.");
 			return true;	
 		}
 		return false;
 	}
 	
 	public boolean checkStartup(Player player){
-		if (!checkPermissions(player, "timeshift.startup")) {
+		if (!checkPermissions(player, cmdStart)) {
 			return false;	
 		}
 		return true;
@@ -82,16 +111,20 @@ public class TimeShiftCommandParser  { //extends PlayerListener
         String commandName = command.getName().toLowerCase();
 	//	String[] split = args;
         //cast sender to player, check if it 'worked' and return if it didn't.
-		Player player = (Player) sender;
-		if (player == null) {
+		Player player;
+		if (sender instanceof Player)
+		{   
+			player = (Player) sender;
+		} else {
 			System.out.println("Do you want to be able to use " + TimeShift.name + " commands from the console? Ask cjc. Maybe.");
+			System.out.println("You would have to specify a world then...");
 			return false;
 		}
 
 		//check that user has one of the permissions at least.
 		if (!checkShift(player) && !checkStartup(player)) {
 			//has neither
-			player.sendMessage("You don't have permission to use /shift.");
+			player.sendMessage("You don't have permission to use /" + cmd + ".");
 			return true;
 		}
 		/*
@@ -99,8 +132,8 @@ public class TimeShiftCommandParser  { //extends PlayerListener
 		 * changed. The number is checked by the Time class every second or so
 		 * to determine what the time should be in the server.
 		 */
-
-		if (commandName.equals("shift")) {
+		//
+		if (commandName.equals(cmd)) {
 			// shift command used, only checking for future ability to. right now, it'd be assumed.
 
 			if (split.length == 0) {
@@ -108,19 +141,20 @@ public class TimeShiftCommandParser  { //extends PlayerListener
 				//if permissions isn't installed, checkPermissions returns true, so users will see "full help"
 				if (checkStartup(player) && checkShift(player)) {
 					//has both
-					player.sendMessage("Usage: /shift day | night | stop | startup <x>");
+					player.sendMessage("Usage: /" + cmd + " day | night | stop | startup <x>");
 				} else if (checkShift(player)) {
 					//has shift only
-					player.sendMessage("Usage: /shift day | night | stop");
+					player.sendMessage("Usage: /" + cmd + " day | night | stop");
 				} else {
 					//has startup only
-					player.sendMessage("Usage: /shift startup [day | night | stop] -- sets startup and /reload behavior only.");
+					player.sendMessage("Usage: /" + cmd + " startup [day | night | stop] -- sets startup and /reload behavior only.");
 				}
 				//command handled
 				return true;
 			}
 			
 			//length was at least 1.
+			//match a string to enum.
 			TierOne T1 = null;
 			try {
 				// try to match first argument to argument list
@@ -128,38 +162,40 @@ public class TimeShiftCommandParser  { //extends PlayerListener
 				if (T1 == null) {
 					//this means a false 1st argument was used.
 					//returning false displays the "full" help from the uml file.
-					//the /help command is not mentioned so that bukkit won't touch it.
+					//the /time command is not included under its own command so that bukkit won't touch it.
 					return false;
 				}
 			} catch (NullPointerException ex) {
 			}
 			switch (T1) {
-
+			//self explanatory
 			case DAY:
-				if (checkShiftError(player)) return true;
-				setSetting(0,player);			
-				server.broadcastMessage("The time suddenly shifts!");
-				break;
+				if (checkShiftError(player)) return true; // displays a "need permission" message. May be a good thing to log too... if anyone cared...
+				setSetting(0,player, split);
+				instance.getServer().broadcastMessage("The time suddenly " + cmd + "s!");
+				return true;
 			case NIGHT:
 				if (checkShiftError(player)) return true;
-				setSetting(13800,player);
-				server.broadcastMessage("The time suddenly shifts!");
-				break;
+				setSetting(13800,player, split);
+				instance.getServer().broadcastMessage("The time suddenly " + cmd + "s!");
+				return true;
 			case STOP:
 				if (checkShiftError(player)) return true;
-				setSetting(-1,player);
-				server.broadcastMessage("Time appears to be back to normal...");
-				break;
+				setSetting(-1,player, split);
+				instance.getServer().broadcastMessage("Time appears to be back to normal...");
+				return true;
 			case STARTUP:
 				// if case is startup, check for permissions.
 				if (!checkStartup(player)) {
-					player.sendMessage("You need timeshift.startup permission.");
+					player.sendMessage("You need " + cmdStart + " permission.");
 					return true;	
 				}
+				//only got the startup command
 				if (split.length == 1) {
-					player.sendMessage("Startup Usage: /shift startup ( day | night | stop )");
+					player.sendMessage("Startup Usage: /" + cmd + " startup [day | night | stop]\n/" + cmd + " startup day -- automatically loop day when the server is /reload 'ed or restarted.");
 					return true;
 				}
+				//trying to get a string to match enum value, null if not matched
 				TierOne T2 = null;
 				try {
 					T2 = asTierOne(split[1]);
@@ -169,22 +205,26 @@ public class TimeShiftCommandParser  { //extends PlayerListener
 					}
 				} catch (NullPointerException ex) {
 				}
+				//self explanatory.
+				//add multi-world-persistent-set.
+				//already added for setSetting
+				//now add for persistentWriter
 				switch (T2) {
 				case DAY:
 					TimeShiftFileReaderWriter.persistentWriter(0, player);
 					player.sendMessage("Server will loop day on startup");
-					break;
+					return true;
 				case NIGHT:
 					TimeShiftFileReaderWriter.persistentWriter(13800, player);
 					player.sendMessage("Server will loop night on startup");
-					break;
+					return true;
 				case STOP:
 					TimeShiftFileReaderWriter.persistentWriter(-1, player);
 					player.sendMessage("Server will not loop on startup");
-					break;
+					return true;
 				case STARTUP:
-					player.sendMessage("Why would you even want to try that?");
-					break;
+					player.sendMessage("Why would you even want to try that? Are you trying to make the universe implode?");
+					return false;
 				default:
 					break;
 				}
@@ -192,13 +232,15 @@ public class TimeShiftCommandParser  { //extends PlayerListener
 			default:
 				break;
 			}
-			//catch shift commands
-			return true;
+			//this return should never be reached
+			return false;
 		} 
-		//never returned true
+		//never returned true, also shouldn't be reached. may be reached if the user changes the yml file. 
 		return false;
 	}
 
+	//should be renamed, along with the enum. Provides an enum value that matches a string, if possible. If not possible, returns null.
+	//function must then check to see if it got null, in which case, string wasn't in enum.
 	private static TierOne asTierOne(String str) {
 		for (TierOne t1 : TierOne.values()) {
 			if (t1.name().equalsIgnoreCase(str)) {
@@ -208,6 +250,7 @@ public class TimeShiftCommandParser  { //extends PlayerListener
 		return null;
 	}
 	
+	//actually kinda TierAll. 2nd tier is startup, and I just parsed the extra.
 	private enum TierOne {
 		DAY, NIGHT, STOP, STARTUP
 	}

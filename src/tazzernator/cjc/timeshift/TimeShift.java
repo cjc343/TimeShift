@@ -1,10 +1,10 @@
 package tazzernator.cjc.timeshift;
 
 //java imports
-import java.io.File;
+//import java.io.File;
 import java.util.ArrayList;
 import java.util.Timer;
-import java.util.Map;
+//import java.util.Map;
 import java.util.HashMap;
 //import java.util.;
 
@@ -16,7 +16,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.event.Event.Priority;
 import org.bukkit.event.Event;
 import org.bukkit.plugin.PluginDescriptionFile;
-import org.bukkit.plugin.PluginLoader;
+//import org.bukkit.plugin.PluginLoader;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 //import org.bukkit.
@@ -45,30 +45,31 @@ public class TimeShift extends JavaPlugin {
 	// for permissions implementation
 	public static PermissionHandler Permissions = null;
 	// store server settings in key=worldname, int setting
-	public static Map<String,Integer> settings = new HashMap<String,Integer>();// = new AbstractMap<String,Integer>();
+	public static HashMap<String,Integer> settings = new HashMap<String,Integer>();// = new AbstractMap<String,Integer>();
 	//public static Vector<String,Integer> settings = new Vector<String,Integer>();
 	// store path to TimeShift.time
 	public static String path;
 	
+	//public static String path2;
 	
 	//private memory
 	private Server server = getServer();
 	//private static Server instance;
 	private Timer tick = null;
 	private int rate = 1000;
-	private final TimeShiftCommandParser commandParser = new TimeShiftCommandParser(this, server);
-	private final TimeShiftPlayerListener tspl = new TimeShiftPlayerListener(this, server);
+	private final TimeShiftCommandParser commandParser = new TimeShiftCommandParser(this);
+	private final TimeShiftPlayerListener tspl = new TimeShiftPlayerListener(this);
 	//holds temporary file input
 	static ArrayList<String> data = new ArrayList<String>();
 
-	
+
 	//constructor
-	public TimeShift(PluginLoader pluginLoader, Server instance, PluginDescriptionFile desc, File folder, File plugin, ClassLoader cLoader) {
-		super(pluginLoader, instance, desc, folder, plugin, cLoader);
-		folder.mkdirs();
-		//set path
-		path = folder.getPath() + "/"+ name + ".startup";
-	}
+//	public TimeShift(PluginLoader pluginLoader, Server instance, PluginDescriptionFile desc, File folder, File plugin, ClassLoader cLoader) {
+//		super(pluginLoader, instance, desc, folder, plugin, cLoader);
+//		folder.mkdirs();
+//		//set path
+//		//path = folder.getPath() + "/"+ name + ".startup";
+//	}
 	
 	
 	//onDisable
@@ -80,6 +81,18 @@ public class TimeShift extends JavaPlugin {
 	
 	//onEnable
 	public void onEnable() {
+	//	System.out.println("Time Shift Path2 : " + path2);
+	//	getConfiguration().
+		if (this.getDataFolder().exists()) {
+			path = this.getDataFolder().getPath() + "/" + name + ".startup";
+		} else {
+			if (this.getDataFolder().mkdirs()) {
+			path = this.getDataFolder().getPath() + "/" + name + ".startup";
+			} else {
+				System.out.println(name + " could not create necessary folder structure for settings.");
+			}
+		}
+		
 		//read file
 		TimeShiftFileReaderWriter.readSettings();
 		
