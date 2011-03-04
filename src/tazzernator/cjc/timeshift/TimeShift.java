@@ -1,32 +1,33 @@
-package com.bukkit.tazzernator.timeshift;
+package tazzernator.cjc.timeshift;
 
 //java imports
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Timer;
-import java.util.Vector;
+import java.util.Map;
+import java.util.HashMap;
+//import java.util.;
 
 //bukkit imports
 import org.bukkit.Server; 
 import org.bukkit.World;
+import org.bukkit.command.Command;
+import org.bukkit.command.CommandSender;
 import org.bukkit.event.Event.Priority;
 import org.bukkit.event.Event;
 import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.PluginLoader;
-import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.plugin.PluginManager;
+import org.bukkit.plugin.java.JavaPlugin;
+//import org.bukkit.
 
-//permissions imports
+//permissions-related imports
 import com.nijikokun.bukkit.Permissions.Permissions;
 import com.nijiko.permissions.PermissionHandler;
 import org.bukkit.plugin.Plugin; //req. by permissions
 
-//file read/write imports
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
+//feb 18 cjc moved read/write into own class/out of all other classes and to use yml to claim /shift
+//also moved to new file name, but not to a yml file, just a world=setting
 
 /**
  * TimeShift for bukkit
@@ -36,144 +37,89 @@ import java.io.IOException;
  */
 // includes
 public class TimeShift extends JavaPlugin {
+	
+	
+	//public memory
+	//Strings should always use this name
+	public static String name = "TimeShift";
+	// for permissions implementation
+	public static PermissionHandler Permissions = null;
+	// store server settings in key=worldname, int setting
+	public static Map<String,Integer> settings = new HashMap<String,Integer>();// = new AbstractMap<String,Integer>();
+	//public static Vector<String,Integer> settings = new Vector<String,Integer>();
+	// store path to TimeShift.time
+	public static String path;
+	
+	
+	//private memory
 	private Server server = getServer();
 	//private static Server instance;
 	private Timer tick = null;
 	private int rate = 1000;
-	private final TimeShiftPlayerListener playerListener = new TimeShiftPlayerListener(this, server);
-
-	//Strings should always use this name
-	public static String name = "TimeShift";
+	private final TimeShiftCommandParser commandParser = new TimeShiftCommandParser(this, server);
+	private final TimeShiftPlayerListener tspl = new TimeShiftPlayerListener(this, server);
 	//holds temporary file input
 	static ArrayList<String> data = new ArrayList<String>();
-	// for permissions implementation
-	public static PermissionHandler Permissions = null;
-	// store server settings
-	public static Vector<Integer> settings = new Vector<Integer>();
-	// store path to TimeShift.time
-	public static String path;
+
+	
+	//constructor
 	public TimeShift(PluginLoader pluginLoader, Server instance, PluginDescriptionFile desc, File folder, File plugin, ClassLoader cLoader) {
 		super(pluginLoader, instance, desc, folder, plugin, cLoader);
-
-	//	TimeShift.instance = instance;
-		//make path to TimeShift.time
 		folder.mkdirs();
 		//set path
-		path = folder.getPath() + "/"+ name + ".time";
-		//read file
-		readSettings();
-		
+		path = folder.getPath() + "/"+ name + ".startup";
 	}
-
+	
+	
+	//onDisable
 	public void onDisable() {
 		//stop the timers
 		tick.cancel();
 	}
-
-	private static ArrayList<String> readLines(String filename) throws IOException {
-		// Method to read our numbers in the startup file
-		data.clear();
-		FileReader fileReader = new FileReader(filename);
-		BufferedReader bufferedReader = new BufferedReader(fileReader);
-		String line = null;
-		while ((line = bufferedReader.readLine()) != null) {
-			data.add(line.toLowerCase());
-		}
-		bufferedReader.close();
-		return data;
-	}
-
-
-//method to take those numbers, parse them, and input them into memory
-	static void readSettings() {
-		try {
-			try {
-				readLines(path);
-			} catch (IOException e) {
-				//create a file if unreadable
-				FileWriter fstream;
-				try {
-					fstream = new FileWriter(path);
-					BufferedWriter out = new BufferedWriter(fstream);
-					out.write("-1");
-					out.close();
-					//input it
-					readSettings();
-				} catch (IOException f) {
-					System.out.println("Could not create file for " + name);
-				}
-			}
-			//iterate through strings, splitting at ,
-			for (String d : data) {
-				//System.out.println("Data point : " + d);
-				String[] sets = d.split(",");
-				for (String e : sets) {
-					//add
-					settings.add(Integer.parseInt(e));
-				}
-			}
-		} catch (Exception e) {
-			//parsing issues mostly?
-			//rewrite file
-			FileWriter fstream;
-			try {
-				fstream = new FileWriter(path);
-				BufferedWriter out = new BufferedWriter(fstream);
-				out.write("-1");
-				out.close();
-				//input it
-				readSettings();
-			} catch (IOException f) {
-	//			System.out.println("Could not create file for " + name);
-			}
-			System.out.println("There was a problem parsing " + name + "'s data. World startup states have been reset.");
-		}
-		//empty file, add -1.
-		if (settings.size() == 0) {
-			FileWriter fstream;
-			try {
-				fstream = new FileWriter(path);
-				BufferedWriter out = new BufferedWriter(fstream);
-				out.write("-1");
-				out.close();
-				//input it.
-				readSettings();
-			} catch (IOException f) {
-				System.out.println("Could not create file for " + name);
-			}
-		}
-	}
-
-	@Override
+	
+	
+	//onEnable
 	public void onEnable() {
+		//read file
+		TimeShiftFileReaderWriter.readSettings();
+		
 		setupPermissions();//setup permissions
 		
-		//settings already read.		
-		
 		// Lets start the Timer instance.
-
-		//this is where changes were once made when server stopped housing the get/set Time functions.
-
-		int i = 0;
+		//start one instance for each world
 		tick = new Timer(true);
 		for (World w : getServer().getWorlds()) {
-			TimeShiftTimer tst = new TimeShiftTimer();
-			tst.world = w;
-			tst.index = i;
-			tick.schedule(tst, 0, rate);
-			i++;
+			scheduleTimer(w);
 		}
-
 		// Register our events
+		//this event only controls /time, nothing else. It attempts to use any /time commands to cancel an active shift
+		//without disrupting the command used. If other plugins don't use this method, we may not see /time commands.
 		PluginManager pm = getServer().getPluginManager();
-		pm.registerEvent(Event.Type.PLAYER_COMMAND, playerListener, Priority.Normal, this);
+		pm.registerEvent(Event.Type.PLAYER_COMMAND, tspl, Priority.Normal, this);
 
 		// Here we just output some info so we can check all is well
 		PluginDescriptionFile pdfFile = this.getDescription();
 		System.out.println(pdfFile.getName() + " version " + pdfFile.getVersion() + " is enabled!");
 	}
+	
+	public void scheduleTimer(World w) {
+		TimeShiftTimer tst = new TimeShiftTimer();
+		tst.world = w;
+		tst.index = w.getName();
+		tick.schedule(tst, 0, rate);
+	}
+	
+	
+	@Override
+    public boolean onCommand(CommandSender sender, Command command, String commandLabel, String[] args) {
+     //   passes off the work of received commands to the class that was once built for that.
+		// this doesn't intercept the /time command, just the /shift commands.
+		// (right now, someone could have changed that) /time is handled by player events still
+        return commandParser.handleCommand(sender, command, commandLabel, args);
+    }
 
-	//modified setup method from Permissions thread by Niji
+
+	//sets up permissions, if present. Does nothing if not.
 	public void setupPermissions() {
 		Plugin test = this.getServer().getPluginManager().getPlugin("Permissions");
 
@@ -181,12 +127,7 @@ public class TimeShift extends JavaPlugin {
 			if (test != null) {
 				TimeShift.Permissions = ((Permissions) test).getHandler();
 			} else {
-				// useP = false;
-				// log.info(Messaging.bracketize("GeneralEssentials") +
-				// " Permission system not enabled. Disabling plugin.");
-				// this.getServer().getPluginManager().disablePlugin(this);
 			}
 		}
-	}
-
+	}//modified setup method from Permissions thread by Niji
 }

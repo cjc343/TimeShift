@@ -1,3 +1,20 @@
 name: TimeShift
-main: com.bukkit.tazzernator.timeshift.TimeShift
-version: 1.4.2
+main: tazzernator.cjc.timeshift.TimeShift
+version: 1.4.3
+website: http://forums.bukkit.org/threads/timeshift-1-4-2-loosely-updated-timerift-in-dev.1265/page-3
+author: Tazzernator (Original Program), cjc (Some Updates), feverdream (open source time logic)
+description: >
+             Allows the time to be looped on demand, or at startup, for each world.
+             This plugin uses the optional Permissions nodes timeshift.startup and timeshift.shift
+commands:
+  shift:
+    description: Changes time behavior on current world.
+    usage: |
+           /<command> - displays permission specific help.
+           /<command> day - loops day.
+           /<command> night - loops night.
+           /<command> stop - stops looping.
+           /<command> startup [state] - sets world startup behavior.
+           /time [anything] - cancels active shifts.
+           Example: /<command> startup day - sets world to loop day on startup (or /reload).
+           Example: /<command> night - sets world to loop night.
