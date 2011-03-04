@@ -11,6 +11,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerChatEvent;
 import org.bukkit.event.player.PlayerListener;
 import org.bukkit.Server;
+import org.bukkit.World;
 
 public class TimeShiftPlayerListener extends PlayerListener {
 	// private final TimeShift plugin;
@@ -35,27 +36,88 @@ public class TimeShiftPlayerListener extends PlayerListener {
 		return data;
 	}
 
-	static void fileWriter(String num) {
-		// Method used to write to our temp file.
+//	static void fileWriter(String num) {
+//		// Method used to write to our temp file.
+//		FileWriter fstream;
+//		try {
+//			fstream = new FileWriter("plugins/TimeShift/TimeShift.time");
+//			BufferedWriter out = new BufferedWriter(fstream);
+//			out.write(num);
+//			out.close();
+//		} catch (IOException e) {
+//		}
+//	}
+
+	//build and write string to file for persistent settings.
+	void persistentWriter(int setting, Player player) {
+	//	System.out.println("persistent state attempted: " + setting + "  in world : " + player.getWorld().hashCode());
+		String output = "";
+		
+		//read in file
+		//modify correct setting
+		//output to file
+		try {
+			readLines(TimeShift.path);
+		} catch (Exception e) {
+		}
+		
+		int i = 0;
+		for (World w : server.getWorlds()) {
+			if (!(w.hashCode() == player.getWorld().hashCode())) {
+				i++;
+			}
+		}
+		
+		int j = 0;
+		for (String d : data) {
+			String[] sets = d.split(",");
+			for (String e : sets) {
+				if (j == i) {
+	//				System.out.println("setting : " + setting);
+					output = output + setting + ",";
+					j++;
+				} else {
+	//				System.out.println("e : " + e);
+					output = output + e + ",";
+					j++;
+				}
+			}
+		}
+		
+		//if we haven't made it to i yet, get there.
+		while (j <= i) {
+			if (j < i) {
+				output = output + "-1,";
+				j++;
+			} else if (j == i) {
+				output = output + setting + ",";
+				j++;
+			}
+		}
+		
+		//write out the output.
 		FileWriter fstream;
 		try {
-			fstream = new FileWriter("plugins/TimeShift/TimeShift.time");
+			fstream = new FileWriter(TimeShift.path);
 			BufferedWriter out = new BufferedWriter(fstream);
-			out.write(num);
+			out.write(output);
 			out.close();
 		} catch (IOException e) {
 		}
 	}
-
-	static void persistentWriter(String num) {
-		// Method used to write to our persistent file.
-		FileWriter fstream;
-		try {
-			fstream = new FileWriter("plugins/TimeShift/TimeShift-Startup.time");
-			BufferedWriter out = new BufferedWriter(fstream);
-			out.write(num);
-			out.close();
-		} catch (IOException e) {
+	
+	//locally changes one of the servers.
+	public void setSetting(int setting, Player player) throws ArrayIndexOutOfBoundsException {
+		int i = 0;
+		for (World w : server.getWorlds()) {
+			if (w.hashCode() == player.getWorld().hashCode()) {
+				try {
+					TimeShift.settings.set(i, setting);
+				} catch (ArrayIndexOutOfBoundsException ex) {
+					TimeShift.settings.add(i, setting);
+				}
+			}
+			i++;
 		}
 	}
 
@@ -64,7 +126,7 @@ public class TimeShiftPlayerListener extends PlayerListener {
 	// also added new functionality:
 	// --optional Permissions support
 	// --Ability to set an on server-load/server-reload default
-	public void onPlayerCommand(PlayerChatEvent event) {
+	public void onPlayerCommand(PlayerChatEvent event) throws NullPointerException,ArrayIndexOutOfBoundsException {
 		String[] split = event.getMessage().split(" ");
 		Player player = event.getPlayer();
 
@@ -83,14 +145,7 @@ public class TimeShiftPlayerListener extends PlayerListener {
 				}
 			}
 
-			TierOne T1 = null;
-			try {
-				// try to match argument to argument list
-				T1 = TierOne.valueOf(split[1].toUpperCase());
-			} catch (Exception ex) {
-				// if there's no matching arg, display help.
-				// if all have permission, display full help.
-				// if permissions are set, display appropriate commands.
+			if (split.length == 1) {
 				if (TimeShift.Permissions != null) {
 					if (!TimeShift.Permissions.has(player, "timeshift.startup")) {
 						// not able to change startup
@@ -103,21 +158,51 @@ public class TimeShiftPlayerListener extends PlayerListener {
 					// no permissions plugin
 					player.sendMessage("Usage: /shift day | night | stop | startup <x>");
 				}
+				event.setCancelled(true);
+				return;
+			}
+			
+			TierOne T1 = null;
+			try {
+				// try to match argument to argument list
+				T1 = asTierOne(split[1]);
+				if (T1 == null) {
+					return;
+				}
+			} catch (NullPointerException ex) {
+				//ex.
+				// if there's no matching arg, display help.
+				// if all have permission, display full help.
+				// if permissions are set, display appropriate commands.
+//				
+//				if (TimeShift.Permissions != null) {
+//					if (!TimeShift.Permissions.has(player, "timeshift.startup")) {
+//						// not able to change startup
+//						player.sendMessage("Usage: /shift day | night | stop");
+//					} else {
+//						// able to change startup
+//						player.sendMessage("Usage: /shift day | night | stop | startup <x>");
+//					}
+//				} else {
+//					// no permissions plugin
+//					player.sendMessage("Usage: /shift day | night | stop | startup <x>");
+//				}
+//				event.setCancelled(true);
 			}
 			switch (T1) {
 
 			case DAY:
-				fileWriter("0");
+				setSetting(0,player);			
 				server.broadcastMessage("The time suddenly shifts!");
 				event.setCancelled(true);
 				break;
 			case NIGHT:
-				fileWriter("13800");
+				setSetting(13800,player);
 				server.broadcastMessage("The time suddenly shifts!");
 				event.setCancelled(true);
 				break;
 			case STOP:
-				fileWriter("-1");
+				setSetting(-1,player);
 				server.broadcastMessage("Time appears to be back to normal...");
 				event.setCancelled(true);
 				break;
@@ -129,25 +214,34 @@ public class TimeShiftPlayerListener extends PlayerListener {
 						return;
 					}
 				}
+				if (split.length == 2) {
+					player.sendMessage("Startup Usage: /shift startup ( day | night | stop )");
+					event.setCancelled(true);
+					return;
+				}
 				TierOne T2 = null;
 				try {
-					T2 = TierOne.valueOf(split[2].toUpperCase());
-				} catch (Exception ex) {
-					player.sendMessage("Startup Usage: /shift startup ( day | night | stop )");
+					T2 = asTierOne(split[2]);
+					if (T2 == null) {
+						return;
+					}
+				} catch (NullPointerException ex) {
+//					player.sendMessage("Startup Usage: /shift startup ( day | night | stop )");
+//					event.setCancelled(true);
 				}
 				switch (T2) {
 				case DAY:
-					persistentWriter("0");
+					persistentWriter(0, player);
 					player.sendMessage("Server will loop day on startup");
 					event.setCancelled(true);
 					break;
 				case NIGHT:
-					persistentWriter("13800");
+					persistentWriter(13800, player);
 					player.sendMessage("Server will loop night on startup");
 					event.setCancelled(true);
 					break;
 				case STOP:
-					persistentWriter("-1");
+					persistentWriter(-1, player);
 					player.sendMessage("Server will not loop on startup");
 					event.setCancelled(true);
 					break;
@@ -170,22 +264,38 @@ public class TimeShiftPlayerListener extends PlayerListener {
 					return;
 				}
 			}
-			// check if there's an active shift
-			try {
-				readLines("plugins/TimeShift/TimeShift.time");
-			} catch (IOException e) {
-			}
-			for (String d : data) {
-				if (Integer.parseInt(d) != -1) {
-					// if there is, cancel it.
-					fileWriter("-1");
-					server.broadcastMessage("Time appears to be back to normal...");
-					event.setCancelled(true);
+			
+			int i = 0;
+			for (World w : server.getWorlds()) {
+				if (w.hashCode() != player.getWorld().hashCode()) {
+					i++;
 				}
 			}
+			try {
+			//TST should fix before it is ever an issue?
+			if (TimeShift.settings.get(i) != -1) {
+				setSetting(-1,player);
+				server.broadcastMessage("Time appears to be back to normal...");
+				event.setCancelled(true);
+			}
+			} catch (ArrayIndexOutOfBoundsException e) {
+				System.out.println(TimeShift.name + " had a minor error with the /time command. Please report.");
+			}
+			
+
 		}
+
 	}
 
+	private static TierOne asTierOne(String str) {
+		for (TierOne t1 : TierOne.values()) {
+			if (t1.name().equalsIgnoreCase(str)) {
+				return t1;
+			}
+		}
+		return null;
+	}
+	
 	private enum TierOne {
 		DAY, NIGHT, STOP, STARTUP
 	}

@@ -1,10 +1,6 @@
 package com.bukkit.tazzernator.timeshift;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.TimerTask; //import org.bukkit.Server;
+import java.util.TimerTask;
 import org.bukkit.World;
 
 /*
@@ -20,49 +16,28 @@ import org.bukkit.World;
 
 // this class is AGPL licensed.
 
+//this class was modified again by cjc on feb 7 in order to shorten it even further and add multi-world support.
+// it should now consist almost solely of the logic from feverdream's Noon, and modified many times at that.
+
 // ******************************** THIS CLASS IS AGPL LICENSED!!!1! **********************************************
 
 public class TimeShiftTimer extends TimerTask {
 	public World world = null;
-	public long wantedTime = 0;
-	public int dayStart;
-	ArrayList<String> data = new ArrayList<String>();
-
-	private ArrayList<String> readLines(String filename) throws IOException {
-		// Method to read our number in the temp file
-		data.clear();
-		FileReader fileReader = new FileReader(filename);
-		BufferedReader bufferedReader = new BufferedReader(fileReader);
-		String line = null;
-		while ((line = bufferedReader.readLine()) != null) {
-			data.add(line.toLowerCase());
-		}
-		bufferedReader.close();
-		return data;
-	}
+	public int index;
 
 	public void run() {
 		long time = world.getTime();
 		long relativeTime = time % 24000;
 		long startOfDay = time - relativeTime;
-
-		// Read number
-		try {
-			readLines("plugins/TimeShift/TimeShift.time");
-		} catch (IOException e) {
-		}
-
-		// Number is loaded
-		for (String d : data) {
-			dayStart = Integer.parseInt(d);
-		}
-
 		// Number is checked, and if it applies, the time is set
-		if (relativeTime > 12000 && dayStart == 0) {
+		try {
+		if (relativeTime > 12000 && TimeShift.settings.get(index) == 0) {
 			world.setTime(startOfDay + 24000);
-		} else if ((relativeTime > 22200 || relativeTime < 13700) && dayStart == 13800) {
+		} else if ((relativeTime > 22200 || relativeTime < 13700) && TimeShift.settings.get(index) == 13800) {
 			world.setTime(startOfDay + 37700);
 		}
+		} catch (Exception e) {
+			TimeShift.settings.add(index, -1);
+		}
 	}
-
 }
