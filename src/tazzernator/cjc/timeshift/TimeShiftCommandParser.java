@@ -216,7 +216,7 @@ public class TimeShiftCommandParser  { //extends PlayerListener
 				}
 				//only got the startup command
 				if (split.length == 1) {
-					player.sendMessage("Startup Usage: /" + cmd + " startup [day | night | stop]\n/" + cmd + " startup day -- automatically loop day when the server is /reload 'ed or restarted.");
+					player.sendMessage("Startup Usage: /" + cmd + " startup [day | night | stop]\n/" + cmd + " startup day -- automatically loop day when the server\nis /reload 'ed or restarted.");
 					return true;
 				}
 				//trying to get a string to match enum value, null if not matched

@@ -96,7 +96,7 @@ public class TimeShift extends JavaPlugin {
 		//this event only controls /time, nothing else. It attempts to use any /time commands to cancel an active shift
 		//without disrupting the command used. If other plugins don't use this method, we may not see /time commands.
 		PluginManager pm = getServer().getPluginManager();
-		pm.registerEvent(Event.Type.PLAYER_COMMAND, tspl, Priority.Normal, this);
+		pm.registerEvent(Event.Type.PLAYER_COMMAND_PREPROCESS, tspl, Priority.Normal, this);
 
 		// Here we just output some info so we can check all is well
 		PluginDescriptionFile pdfFile = this.getDescription();

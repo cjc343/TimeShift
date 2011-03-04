@@ -19,7 +19,7 @@ public class TimeShiftPlayerListener extends PlayerListener {
 	}
 	
 	//handles /time command only in order to 'peacefully' use it?
-	public void onPlayerCommand(PlayerChatEvent event) {
+	public void onPlayerCommandPreProcess(PlayerChatEvent event) {
 		String[] split = event.getMessage().split(" ");
 		Player player = event.getPlayer();
 		if (split[0].equalsIgnoreCase("/time")) {
