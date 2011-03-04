@@ -1,6 +1,6 @@
 name: TimeShift
 main: tazzernator.cjc.timeshift.TimeShift
-version: 1.4.3.2
+version: 1.4.4
 website: http://forums.bukkit.org/threads/timeshift-1-4-2-loosely-updated-timerift-in-dev.1265/page-3
 author: Tazzernator (Original Program), cjc (Some Updates), feverdream (open source time logic)
 description: >

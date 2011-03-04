@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.bukkit.Server;
+//import org.bukkit.Server;
 import org.bukkit.World;
 
 public class TimeShiftCommandParser  { //extends PlayerListener
@@ -20,14 +20,51 @@ public class TimeShiftCommandParser  { //extends PlayerListener
 	public TimeShiftCommandParser(TimeShift instance) {
 		this.instance = instance;
 	}
+	
+	//---------------------- setting persistent settings
 
-	private void setSetting(int setting, Player player, String[] split) {
-		if (split.length > 1){
-			for (int i = 1; i < split.length; i++) {
-				setSettingByName(setting,split[i]);
+	private void setPersist(int setting, Player player, String[] split) {
+
+		if (split.length > 2) {
+			for (int i = 2; i < split.length; i++) {
+				World w = this.instance.getServer().getWorld(split[i]);
+				if (w != null) {
+					TimeShiftFileReaderWriter.persistentWriter(setting, w);
+					printPersist(setting, player);
+				} else {
+					player.sendMessage("The world " + split[i] + " doesn't exist.");
+				}
 			}
 		} else {
-			setSettingPlayer(setting,player);
+			TimeShiftFileReaderWriter.persistentWriter(setting, player.getWorld());
+			printPersist(setting, player);
+		}
+	}
+	
+	private void printPersist(int setting, Player player) {
+		if (setting == 0) {
+			player.sendMessage("Server will loop day on startup");
+		} else if (setting == -1) {
+			player.sendMessage("Server will not loop on startup");
+		} else {
+			player.sendMessage("Server will loop night on startup");
+		}
+	}
+	
+	// ------------------ setting temporary settings
+
+	private void setSetting(int setting, Player player, String[] split) {
+		if (split.length > 1) {
+			for (int i = 1; i < split.length; i++) {
+				if (setSettingByName(setting, split[i])) {
+					instance.getServer().broadcastMessage("The time suddenly " + cmd + "s on [" + split[i] + "]!");
+				} else {
+					player.sendMessage("The world " + split[i] + " doesn't exist.");
+				}
+			}
+		} else {
+			instance.getServer().broadcastMessage("The time suddenly " + cmd + "s on [" + player.getWorld().getName() + "]!");
+			setSettingPlayer(setting, player);
 		}
 	}
 	
@@ -55,8 +92,6 @@ public class TimeShiftCommandParser  { //extends PlayerListener
 			return true;
 		}
 	}
-	
-
 
 	
 	//checks if a player has permission to use permission.
@@ -70,25 +105,19 @@ public class TimeShiftCommandParser  { //extends PlayerListener
 	}
 	
 	public boolean checkShift(Player player){
-		if (!checkPermissions(player, cmdPerm)) {
-			return false;	
-		}
-		return true;
-	}
-	
-	private boolean checkShiftError(Player player) {
-		if (!checkShift(player)) {
-			player.sendMessage("You need " + cmdPerm + " permission.");
-			return true;	
-		}
+		if (checkPermissions(player, cmdPerm)) return true;	
 		return false;
 	}
 	
-	public boolean checkStartup(Player player){
-		if (!checkPermissions(player, cmdStart)) {
-			return false;	
-		}
+	private boolean checkShiftError(Player player) {
+		if (checkShift(player)) return false;	
+		player.sendMessage("You need " + cmdPerm + " permission.");
 		return true;
+	}
+	
+	public boolean checkStartup(Player player){
+		if (checkPermissions(player, cmdStart)) return true;	
+		return false;
 	}
 	//feb 17th and 18th
 	//reworked to be 'handleCommand' and to not handle /time, only /shift commands, which are claimed in yml.
@@ -112,8 +141,7 @@ public class TimeShiftCommandParser  { //extends PlayerListener
 	//	String[] split = args;
         //cast sender to player, check if it 'worked' and return if it didn't.
 		Player player;
-		if (sender instanceof Player)
-		{   
+		if (sender instanceof Player) {
 			player = (Player) sender;
 		} else {
 			System.out.println("Do you want to be able to use " + TimeShift.name + " commands from the console? Ask cjc. Maybe.");
@@ -122,11 +150,8 @@ public class TimeShiftCommandParser  { //extends PlayerListener
 		}
 
 		//check that user has one of the permissions at least.
-		if (!checkShift(player) && !checkStartup(player)) {
-			//has neither
-			player.sendMessage("You don't have permission to use /" + cmd + ".");
-			return true;
-		}
+		if (checkShift(player) || checkStartup(player)) {
+		
 		/*
 		 * Depending on the player's command, the number in the temp file is
 		 * changed. The number is checked by the Time class every second or so
@@ -172,7 +197,6 @@ public class TimeShiftCommandParser  { //extends PlayerListener
 			case DAY:
 				if (checkShiftError(player)) return true; // displays a "need permission" message. May be a good thing to log too... if anyone cared...
 				setSetting(0,player, split);
-				instance.getServer().broadcastMessage("The time suddenly " + cmd + "s!");
 				return true;
 			case NIGHT:
 				if (checkShiftError(player)) return true;
@@ -211,16 +235,13 @@ public class TimeShiftCommandParser  { //extends PlayerListener
 				//now add for persistentWriter
 				switch (T2) {
 				case DAY:
-					TimeShiftFileReaderWriter.persistentWriter(0, player);
-					player.sendMessage("Server will loop day on startup");
+					setPersist(0, player, split);
 					return true;
 				case NIGHT:
-					TimeShiftFileReaderWriter.persistentWriter(13800, player);
-					player.sendMessage("Server will loop night on startup");
+					setPersist(13800, player, split);
 					return true;
 				case STOP:
-					TimeShiftFileReaderWriter.persistentWriter(-1, player);
-					player.sendMessage("Server will not loop on startup");
+					setPersist(-1, player, split);
 					return true;
 				case STARTUP:
 					player.sendMessage("Why would you even want to try that? Are you trying to make the universe implode?");
@@ -235,6 +256,12 @@ public class TimeShiftCommandParser  { //extends PlayerListener
 			//this return should never be reached
 			return false;
 		} 
+		
+	} else {
+		//has neither permission
+		player.sendMessage("You don't have permission to use /" + cmd + ".");
+		return true;
+	}
 		//never returned true, also shouldn't be reached. may be reached if the user changes the yml file. 
 		return false;
 	}

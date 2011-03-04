@@ -9,7 +9,7 @@ import java.util.HashMap;
 //import java.util.;
 
 //bukkit imports
-import org.bukkit.Server; 
+//import org.bukkit.Server; 
 import org.bukkit.World;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -53,24 +53,12 @@ public class TimeShift extends JavaPlugin {
 	//public static String path2;
 	
 	//private memory
-	private Server server = getServer();
-	//private static Server instance;
 	private Timer tick = null;
 	private int rate = 1000;
 	private final TimeShiftCommandParser commandParser = new TimeShiftCommandParser(this);
 	private final TimeShiftPlayerListener tspl = new TimeShiftPlayerListener(this);
 	//holds temporary file input
 	static ArrayList<String> data = new ArrayList<String>();
-
-
-	//constructor
-//	public TimeShift(PluginLoader pluginLoader, Server instance, PluginDescriptionFile desc, File folder, File plugin, ClassLoader cLoader) {
-//		super(pluginLoader, instance, desc, folder, plugin, cLoader);
-//		folder.mkdirs();
-//		//set path
-//		//path = folder.getPath() + "/"+ name + ".startup";
-//	}
-	
 	
 	//onDisable
 	public void onDisable() {
@@ -78,9 +66,9 @@ public class TimeShift extends JavaPlugin {
 		tick.cancel();
 	}
 	
-	
 	//onEnable
 	public void onEnable() {
+		try {
 	//	System.out.println("Time Shift Path2 : " + path2);
 	//	getConfiguration().
 		if (this.getDataFolder().exists()) {
@@ -113,6 +101,10 @@ public class TimeShift extends JavaPlugin {
 		// Here we just output some info so we can check all is well
 		PluginDescriptionFile pdfFile = this.getDescription();
 		System.out.println(pdfFile.getName() + " version " + pdfFile.getVersion() + " is enabled!");
+		} catch (Exception e) {
+			System.out.println("Exception thrown in onEnable " + name);
+			e.printStackTrace();
+		}
 	}
 	
 	public void scheduleTimer(World w) {
@@ -131,16 +123,17 @@ public class TimeShift extends JavaPlugin {
         return commandParser.handleCommand(sender, command, commandLabel, args);
     }
 
-
-	//sets up permissions, if present. Does nothing if not.
-	public void setupPermissions() {
-		Plugin test = this.getServer().getPluginManager().getPlugin("Permissions");
-
-		if (TimeShift.Permissions == null) {
-			if (test != null) {
-				TimeShift.Permissions = ((Permissions) test).getHandler();
-			} else {
-			}
-		}
-	}//modified setup method from Permissions thread by Niji
+	
+	//new setupPermissions courtesy of Acru
+	//http://forums.bukkit.org/posts/79813/
+	//changed this to TimeShift
+	private void setupPermissions() {
+        Plugin test = this.getServer().getPluginManager().getPlugin("Permissions");
+        if (TimeShift.Permissions == null) {
+            if (test != null) {
+                this.getServer().getPluginManager().enablePlugin(test); // This line.
+                TimeShift.Permissions = ((Permissions)test).getHandler();
+            }
+        }
+    }//modified setup method from Permissions thread by Niji
 }

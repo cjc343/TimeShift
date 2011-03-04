@@ -8,7 +8,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 import org.bukkit.World;
-import org.bukkit.entity.Player;
+//import org.bukkit.entity.Player;
 
 public class TimeShiftFileReaderWriter {
 
@@ -55,11 +55,9 @@ public class TimeShiftFileReaderWriter {
 
 			for (String d : TimeShift.data) {
 				if (d.length() >= 3) {
-					//System.out.println(d);
 					String[] sets = d.split("=");
 					int setting = Integer.parseInt(sets[1]);
 					String world = sets[0];
-					//System.out.println(world + " and " + setting + " with sets.length : " +  sets.length);
 					if (sets.length == 2) {
 						try {
 						TimeShift.settings.put(world, setting);
@@ -78,8 +76,7 @@ public class TimeShiftFileReaderWriter {
 	}
 
 	// build and write string to file for persistent settings.
-	public static void persistentWriter(int setting, Player player) {
-	//	System.out.println("persistent state attempted: " + setting + "  in world : " + player.getWorld().hashCode());
+	public static void persistentWriter(int setting, World w) {
 		String output = "";
 		
 		//read in file
@@ -89,8 +86,6 @@ public class TimeShiftFileReaderWriter {
 				readLines(TimeShift.path);
 		} catch (Exception e) {
 		}
-		
-		World w = player.getWorld();
 
 		Boolean isSet = false;
 		for (String d : TimeShift.data) {
