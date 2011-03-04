@@ -7,6 +7,7 @@ import java.io.FileWriter;
 import java.util.Timer;
 
 import org.bukkit.Server;
+//import org.bukkit.World;
 import org.bukkit.event.Event.Priority;
 import org.bukkit.event.Event;
 import org.bukkit.plugin.PluginDescriptionFile;
@@ -55,7 +56,8 @@ public class TimeShift extends JavaPlugin{
 		
 		//Lets start the Timer instance.
 		TimeShiftTimer tst = new TimeShiftTimer();
-		tst.server = getServer();
+		//cjc343 made a change here. tst.server is now actually a world, but has not been renamed.
+		tst.server = getServer().getWorlds()[0];
 		tick = new Timer();
 		tick.schedule(tst, 0, rate);
 		

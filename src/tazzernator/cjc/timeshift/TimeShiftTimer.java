@@ -5,14 +5,16 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.TimerTask;
-import org.bukkit.Server;
+//import org.bukkit.Server;
+import org.bukkit.World;
 
 /*
  * Credit for the concept of this class goes to feverdream
  * https://github.com/feverdream/
  */
 public class TimeShiftTimer extends TimerTask{
-	public Server server = null;
+	//cjc343 made a change here. This used to be a server. Now it's world[0]
+	public World server = null;
 	public long wantedTime = 0;
 	public int dayStart;
 	ArrayList<String> data = new ArrayList<String>();
