@@ -26,7 +26,7 @@ public class TimeShiftPlayerListener extends PlayerListener {
 			// time command cancels an active shift only
 			// check for permission to (cancel a) shift
 			if (TimeShift.Permissions != null) {
-				if (!TimeShift.Permissions.has(player, TimeShiftCommandParser.cmdPerm)) {
+				if (!TimeShift.Permissions.getHandler().has(player, TimeShiftCommandParser.cmdPerm) || !TimeShift.Permissions.getHandler().has(player, TimeShiftCommandParser.cmdCancel)) {
 					return;
 				}
 			}		

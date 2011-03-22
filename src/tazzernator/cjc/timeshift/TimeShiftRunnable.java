@@ -1,6 +1,6 @@
 package tazzernator.cjc.timeshift;
 
-import java.util.TimerTask;
+//import java.util.TimerTask;
 import org.bukkit.World;
 
 /*
@@ -19,11 +19,12 @@ import org.bukkit.World;
 // this class is AGPL licensed.
 
 //this class was modified again by cjc on feb 7 in order to shorten it even further and add multi-world support.
-// it should now consist almost solely of the logic from feverdream's Noon, and modified many times at that.
+// it should now consist almost solely of the time logic from feverdream's Noon, and modified many times at that. <- comment modified march 8 to clarify
 
 // ******************************** THIS CLASS IS AGPL LICENSED!!!1! **********************************************
-
-public class TimeShiftTimer extends TimerTask {
+//modified by cjc feb 27 to implement runnable instead of extending TimerTask
+//modified by cjc mar 18 to potentially implement sunrise and sunset WITHOUT looking at Noon or ExtendDay code. Which means it's probably not right yet.
+public class TimeShiftRunnable implements Runnable {
 	public World world = null;
 	public String index;
 
@@ -31,12 +32,24 @@ public class TimeShiftTimer extends TimerTask {
 		long time = world.getTime();
 		long relativeTime = time % 24000;
 		long startOfDay = time - relativeTime;
+
 		// Number is checked, and if it applies, the time is set
 		try {
-			if (relativeTime > 12000 && TimeShift.settings.get(index) == 0) {
+			int setting = TimeShift.settings.get(index);
+			if (relativeTime > 12000 && setting == 0) {//day
 				world.setTime(startOfDay + 24000);
-			} else if ((relativeTime > 22200 || relativeTime < 13700) && TimeShift.settings.get(index) == 13800) {
+			} else if ((relativeTime > 22200 || relativeTime < 13700) && setting == 13800) {//night
 				world.setTime(startOfDay + 37700);
+			} else if ((relativeTime < 12000 || relativeTime > 13700) && setting == 12000) {//sunset
+				world.setTime(startOfDay + 36000);
+			} else if (relativeTime < 22000 && setting == 22000) {//sunrise
+				world.setTime(startOfDay + 46000);
+			} else if (setting == -2) {
+				if (relativeTime < 12000) {
+					world.setTime(startOfDay + 36000);
+				} else if (relativeTime > 13700 && relativeTime < 22000) {
+					world.setTime(startOfDay + 46000);
+				}
 			}
 		} catch (Exception e) {
 			TimeShift.settings.put(index, -1);
