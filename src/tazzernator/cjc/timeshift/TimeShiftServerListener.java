@@ -13,7 +13,7 @@ public class TimeShiftServerListener extends ServerListener {
     }
 
     @Override
-    public void onPluginEnabled(PluginEvent event) {
+    public void onPluginEnable(PluginEvent event) {
         if (TimeShift.Permissions == null) {
             Plugin plugin = origin.getServer().getPluginManager().getPlugin("Permissions");
 
@@ -26,7 +26,7 @@ public class TimeShiftServerListener extends ServerListener {
         }
     }
     @Override
-    public void onPluginDisabled(PluginEvent event) {
+    public void onPluginDisable(PluginEvent event) {
         if (TimeShift.Permissions != null) {
             String plugin = event.getPlugin().getDescription().getName();
 

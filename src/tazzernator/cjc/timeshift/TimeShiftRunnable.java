@@ -32,19 +32,19 @@ public class TimeShiftRunnable implements Runnable {
 		long time = world.getTime();
 		long relativeTime = time % 24000;
 		long startOfDay = time - relativeTime;
-
+		// modified by cjc march 22 (may have started late on the 21st, but I thought it was after midnight) to add sunrise, sunset, and a combo setting. After posting 1.5, added this comment to source and rearranged the order of checks in the if block below for (every so slightly) improved efficiency. Instead of finishing in O(1) time, it now finishes in (unnoticeably) faster O(1).
 		// Number is checked, and if it applies, the time is set
 		try {
 			int setting = TimeShift.settings.get(index);
 			if (relativeTime > 12000 && setting == 0) {//day
 				world.setTime(startOfDay + 24000);
-			} else if ((relativeTime > 22200 || relativeTime < 13700) && setting == 13800) {//night
+			} else if (setting == 13800 && (relativeTime > 22200 || relativeTime < 13700)) {//night
 				world.setTime(startOfDay + 37700);
-			} else if ((relativeTime < 12000 || relativeTime > 13700) && setting == 12000) {//sunset
+			} else if (setting == 12000 && (relativeTime < 12000 || relativeTime > 13700)) {//sunset
 				world.setTime(startOfDay + 36000);
-			} else if (relativeTime < 22000 && setting == 22000) {//sunrise
+			} else if (setting == 22000 && relativeTime < 22000) {//sunrise
 				world.setTime(startOfDay + 46000);
-			} else if (setting == -2) {
+			} else if (setting == -2) {//riseset/setrise
 				if (relativeTime < 12000) {
 					world.setTime(startOfDay + 36000);
 				} else if (relativeTime > 13700 && relativeTime < 22000) {

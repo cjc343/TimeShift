@@ -5,10 +5,9 @@ import java.util.ArrayList;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-//import org.bukkit.Server;
 import org.bukkit.World;
 
-public class TimeShiftCommandParser  { //extends PlayerListener
+public class TimeShiftCommandParser  {
 	private TimeShift instance;
 	//show up in a lot of places. Actual string only shows up here. Some places still need adjustment
 	private final static String cmd = "shift";
@@ -17,31 +16,28 @@ public class TimeShiftCommandParser  { //extends PlayerListener
 	private final String cmdStart = "time" + cmd + ".startup";		// cannot cancel shifts via /shift stop commands, 
 	ArrayList<String> data = new ArrayList<String>();
 
-	
 	public TimeShiftCommandParser(TimeShift instance) {
 		this.instance = instance;
 	}
 	
 	//---------------------- setting persistent (in file) settings
-
 	private void setPersist(int setting, Player player, String[] split) {
-
-		if (split.length > 2) {
+		if (split.length > 2) { //split length > 2, multi-world command
 			for (int i = 2; i < split.length; i++) {
-				World w = this.instance.getServer().getWorld(split[i]);
+				World w = this.instance.getServer().getWorld(split[i]);//try to get a world for each worldname
 				if (w != null) {
-					TimeShiftFileReaderWriter.persistentWriter(setting, w);
-					printPersist(setting, player,w);
+					TimeShiftFileReaderWriter.persistentWriter(setting, w);//world exists, write persistent setting
+					printPersist(setting, player, w); //print result
 				} else {
-					player.sendMessage("The world " + split[i] + " doesn't exist.");
+					player.sendMessage("The world " + split[i] + " doesn't exist."); //world name doesn't exist
 				}
 			}
-		} else {
+		} else {//command on current player world
 			TimeShiftFileReaderWriter.persistentWriter(setting, player.getWorld());
 			printPersist(setting, player, player.getWorld());
 		}
 	}
-	
+	// send notice to user of startup change.
 	private void printPersist(int setting, Player player,World w) {
 		if (setting == 0) {
 			player.sendMessage("World [" + w.getName() + "] will loop day on startup");
@@ -53,9 +49,8 @@ public class TimeShiftCommandParser  { //extends PlayerListener
 	}
 	
 	// ------------------ setting temporary (in memory only) settings
-
 	private void setSetting(int setting, Player player, String[] split) {
-		if (split.length > 1) {
+		if (split.length > 1) {//multi world
 			for (int i = 1; i < split.length; i++) {
 				if (setSettingByName(setting, split[i])) {
 					if (setting == -1){
@@ -67,7 +62,7 @@ public class TimeShiftCommandParser  { //extends PlayerListener
 					player.sendMessage("The world " + split[i] + " doesn't exist.");
 				}
 			}
-		} else {
+		} else {//single world
 			if (setting == -1) {
 				instance.getServer().broadcastMessage("The time appears to be back to normal on [" + player.getWorld().getName() + "]");
 			} else {
@@ -105,12 +100,12 @@ public class TimeShiftCommandParser  { //extends PlayerListener
 	
 	//checks if a player has permission to use permission.
 	public boolean checkPermissions(Player p, String permission) {
-		if (TimeShift.Permissions != null) {
-			
-			if (!TimeShift.Permissions.getHandler().has(p, permission)) {
-				return false;
+		if (TimeShift.Permissions != null) { // if permissions are defined
+			if (!TimeShift.Permissions.getHandler().has(p, permission)) { // and player has no permission
+				return false; 
 			}
-		}		
+		}
+		// Permissions not defined, or player has permission
 		return true;
 	}
 	
@@ -133,7 +128,7 @@ public class TimeShiftCommandParser  { //extends PlayerListener
 	//reworked to be 'handleCommand' and to not handle /time, only /shift commands, which are claimed in yml.
 	//this has caused this class to part into a commandparser and a playerlistener.
 	//the player listener handles only the /time command, and hopefully does so in a way that does not
-	//interfere with other plugins. It may not be triggered still if another plugin claims /time.
+	//interfere with other plugins.
 	
 	//also, general fixes.
 	//moved permission checking into a function, simplified setSetting, simplified world-finding

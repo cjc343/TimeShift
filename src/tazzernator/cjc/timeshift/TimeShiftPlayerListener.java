@@ -19,14 +19,15 @@ public class TimeShiftPlayerListener extends PlayerListener {
 	}
 	
 	//handles /time command only in order to 'peacefully' use it?
-	public void onPlayerCommandPreProcess(PlayerChatEvent event) {
+	@Override
+	public void onPlayerCommandPreprocess(PlayerChatEvent event) {
 		String[] split = event.getMessage().split(" ");
 		Player player = event.getPlayer();
 		if (split[0].equalsIgnoreCase("/time")) {
 			// time command cancels an active shift only
 			// check for permission to (cancel a) shift
 			if (TimeShift.Permissions != null) {
-				if (!TimeShift.Permissions.getHandler().has(player, TimeShiftCommandParser.cmdPerm) || !TimeShift.Permissions.getHandler().has(player, TimeShiftCommandParser.cmdCancel)) {
+				if (!TimeShift.Permissions.getHandler().has(player, TimeShiftCommandParser.cmdPerm) && !TimeShift.Permissions.getHandler().has(player, TimeShiftCommandParser.cmdCancel)) {
 					return;
 				}
 			}		
