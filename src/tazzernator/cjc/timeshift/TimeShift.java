@@ -11,6 +11,7 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.event.Event.Priority;
 import org.bukkit.event.Event;
+import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -68,7 +69,7 @@ public class TimeShift extends JavaPlugin {
 					System.out.println(name + " could not create necessary folder structure for settings.");
 				}
 			}
-
+			setupPermissions();
 			// read file
 			TimeShiftFileReaderWriter.readSettings();
 
@@ -96,11 +97,21 @@ public class TimeShift extends JavaPlugin {
 		}
 	}
 
+    private void setupPermissions() {
+    	//setup permissions
+        Plugin plugin = this.getServer().getPluginManager().getPlugin("Permissions");
+        if (TimeShift.Permissions == null) {
+            if (plugin != null) {
+            	TimeShift.Permissions = (Permissions)plugin;
+                System.out.println("[" + TimeShift.name + "] hooked into Permissions.");
+            }
+        }
+    }
+	
 	// now thread safe? I have no way of actually knowing since I had no repeatable method to test any resulting bugs before.
 	public void scheduleTimer(World w) {
 		final TimeShiftRunnable tst = new TimeShiftRunnable();
 		tst.world = w;
-		tst.index = w.getName();
 
 		getServer().getScheduler().scheduleAsyncRepeatingTask(plugin, new Runnable() {
 			public void run() {
