@@ -8,7 +8,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 import org.bukkit.World;
-//import org.bukkit.entity.Player;
 
 public class TimeShiftFileReaderWriter {
 
@@ -19,7 +18,7 @@ public class TimeShiftFileReaderWriter {
 		BufferedReader bufferedReader = new BufferedReader(fileReader);
 		String line = null;
 		while ((line = bufferedReader.readLine()) != null) {
-			TimeShift.data.add(line.toLowerCase());
+			TimeShift.data.add(line);
 		}
 		bufferedReader.close();
 		//returns a list of lines, each line contains settings for a world.
