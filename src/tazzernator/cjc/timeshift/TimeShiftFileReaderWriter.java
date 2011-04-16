@@ -29,7 +29,7 @@ public class TimeShiftFileReaderWriter {
 		//writes out a dummy file. 
 		FileWriter fstream;
 		try {
-			fstream = new FileWriter(TimeShift.path);
+			fstream = new FileWriter(TimeShift.path + "/timeshift.startup");
 			BufferedWriter out = new BufferedWriter(fstream);
 			out.write("world=-1");
 			out.close();
@@ -44,13 +44,13 @@ public class TimeShiftFileReaderWriter {
 		try {
 			try {
 				//get list of world settings
-				readLines(TimeShift.path);
+				readLines(TimeShift.path + "/timeshift.startup");
 			} catch (IOException e) {
 				// create a file if unreadable
 				initializeFile();
 				try {
 					//try to list settings again
-					readLines(TimeShift.path);
+					readLines(TimeShift.path + "/timeshift.startup");
 				} catch (Exception p) {
 					//still errored, blah
 					System.out.println(TimeShift.name + " had a ton of trouble with its settings file.");
@@ -92,7 +92,7 @@ public class TimeShiftFileReaderWriter {
 		//modify correct setting
 		//output to file
 		try {
-			readLines(TimeShift.path);
+			readLines(TimeShift.path + "/timeshift.startup");
 		} catch (Exception e) {
 		}
 
@@ -119,7 +119,7 @@ public class TimeShiftFileReaderWriter {
 		//write out the output.
 		FileWriter fstream;
 		try {
-			fstream = new FileWriter(TimeShift.path);
+			fstream = new FileWriter(TimeShift.path + "/timeshift.startup");
 			BufferedWriter out = new BufferedWriter(fstream);
 			out.write(output);
 			out.close();

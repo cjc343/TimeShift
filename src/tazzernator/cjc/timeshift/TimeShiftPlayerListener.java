@@ -6,16 +6,11 @@ import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import org.bukkit.event.player.PlayerListener;
 
 public class TimeShiftPlayerListener extends PlayerListener {
-	private TimeShift plugin;
+//	private TimeShift plugin;
 
 	
-	public TimeShiftPlayerListener(TimeShift instance) {
-		this.plugin = instance;
-	}
-	
-	private void setSetting(int setting, Player player) {
-		World w = plugin.getServer().getWorld(player.getWorld().getName());
-		TimeShift.settings.put(w.getName(), setting);
+	public TimeShiftPlayerListener() {
+	//	this.plugin = instance;
 	}
 	
 	//handles /time command only in order to 'peacefully' use it?
@@ -37,8 +32,8 @@ public class TimeShiftPlayerListener extends PlayerListener {
 			try {
 				// TST should fix before it is ever an issue?
 				if (TimeShift.settings.get(w.getName()) != -1) {
-					setSetting(-1, player);
-					plugin.getServer().broadcastMessage(TimeShiftCommandParser.norm + w.getName() + TimeShiftCommandParser.clbr);
+					TimeShift.settings.put(player.getWorld().getName(), -1);
+					TimeShiftMessaging.sendMessage(player, player.getWorld(), -1, false);// print result
 				}
 			} catch (ArrayIndexOutOfBoundsException e) {
 				System.out.println(TimeShift.name + " had a minor error with the /time command. Please report.");

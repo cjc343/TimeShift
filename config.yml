@@ -1,0 +1,26 @@
+strings:
+    shift:
+        string: 'The time suddenly shifts on [%world]'
+        destination: server-announce
+    cancel:
+        string: 'The time appears to be back to normal on [%world]'
+        destination: server-announce
+    startup:
+        shift:
+            string: 'World [%world] will loop %setting on startup'
+            destination: player
+        cancel:
+            string: 'World [%world] will not loop on startup'
+            destination: player
+    errors:
+        error-logging: true
+        dne: 'The world [%world] does not exist'
+        shift-permission: 'You need timeshift.shift permission.'
+        startup-permission: 'You need timeshift.startup permission.'
+        console-specify: 'You need to specify a world when using the console.'
+        no-perm: 'You do not have permission to use shift commands.'
+    help:
+        console: 'Usage: shift <day | night | stop | sunrise | sunset | setrise> <world(s)>'
+        shift-only: 'Usage: /shift <day | night | stop | sunrise | sunset | setrise>'
+        startup-only: 'Usage: /shift startup <day | night | stop | sunrise | sunset | setrise> -- sets startup and /reload behavior only'
+        shift-startup: 'Usage: /shift <day | night | stop | sunrise | sunset | setrise | startup [option]>'

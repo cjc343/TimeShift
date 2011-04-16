@@ -14,31 +14,6 @@ public class TimeShiftCommandParser {
 	public static final String cmdCancel = time + cmd + ".cancel"; // help uses for canceling shifts
 	private final String cmdStart = time + cmd + ".startup"; // cannot cancel shifts via /shift stop commands,
 
-	private final String wrld = "World [";
-	private final String will = "] will loop ";
-	private final String wont = "] will not loop ";
-	private final String dne = "] doesn't exist.";
-	private final String onStart = " on startup";
-	public static final String norm = "The " + time + " appears to be back to normal on [";
-	private final String suddenShift = "The " + time + " suddenly " + cmd + "s on [";
-	private final String sp = " ";
-	private final String sep = " | ";
-	private final String sl = "/";
-	public static final String clbr = "]";
-
-	private final String day = "day";
-	private final String night = "night";
-	private final String sunrise = "sunrise";
-	private final String sunset = "sunset";
-	private final String stop = "stop";
-	private final String setrise = "sunrise and sunset";
-	
-	private final String use = "Usage: ";
-	private final String need = "You need ";
-	private final String perm = " permission.";
-	private final String specWorld = need + "to specify a world when using the console.";
-	
-	private final String opts = sp + day + sep + night + sep + stop + sep + sunrise + sep + sunset + sep + setrise;
 
 	public TimeShiftCommandParser(TimeShift instance) {
 		this.instance = instance;
@@ -51,36 +26,19 @@ public class TimeShiftCommandParser {
 				World w = this.instance.getServer().getWorld(split[i]);// try to get a world for each worldname
 				if (w != null) {
 					TimeShiftFileReaderWriter.persistentWriter(setting, w);// world exists, write persistent setting
-					printPersist(setting, sender, w); // print result
+					TimeShiftMessaging.sendMessage(sender, w, setting, true);// print result
 				} else {
-					sender.sendMessage(wrld + split[i] + dne); // world name doesn't exist
+					TimeShiftMessaging.sendError(sender, 0, split[i]); //dne error
 				}
 			}
 		} else {// command on current player world
 			if (sender instanceof Player) {
 				Player player = (Player) sender;
 				TimeShiftFileReaderWriter.persistentWriter(setting, player.getWorld());
-				printPersist(setting, sender, player.getWorld());
+				TimeShiftMessaging.sendMessage(sender, player.getWorld(), setting, true);// print result
 			} else {
-				sender.sendMessage(specWorld);
+				TimeShiftMessaging.sendError(sender, 3, "");//specify world from console error
 			}
-		}
-	}
-
-	// send notice to user of startup change.
-	private void printPersist(int setting, CommandSender player, World w) {
-		if (setting == 0) {
-			player.sendMessage(wrld + w.getName() + will + day + onStart);
-		} else if (setting == -1) {
-			player.sendMessage(wrld + w.getName() + wont + onStart);
-		} else if (setting == -2) {
-			player.sendMessage(wrld + w.getName() + will + setrise + onStart);
-		} else if (setting == 12000) {
-			player.sendMessage(wrld + w.getName() + will + sunset + onStart);
-		} else if (setting == 22000) {
-			player.sendMessage(wrld + w.getName() + will + sunrise + onStart);
-		} else {
-			player.sendMessage(wrld + w.getName() + will + night + onStart);
 		}
 	}
 
@@ -88,52 +46,28 @@ public class TimeShiftCommandParser {
 	private void setSetting(int setting, CommandSender sender, String[] split) {
 		if (split.length > 1) {// multi world
 			for (int i = 1; i < split.length; i++) {
-				if (setSettingByName(setting, split[i])) {
-					if (setting == -1) {
-						instance.getServer().broadcastMessage(norm + split[i] + clbr);
-					} else {
-						instance.getServer().broadcastMessage(suddenShift + split[i] + clbr);
+				World w = this.instance.getServer().getWorld(split[i]);
+				if (w != null) {
+					if (TimeShift.settings.put(w.getName(), setting) == null) {
+						instance.scheduleTimer(w);
 					}
+					TimeShiftMessaging.sendMessage(sender, w, setting, false);// print result
 				} else {
-					sender.sendMessage(wrld + split[i] + dne);
+					TimeShiftMessaging.sendError(sender, 0, split[i]); //dne error
 				}
 			}
-		} else {// single world
+		} else {// single world, based on player info
 			if (sender instanceof Player) {
-				Player player = (Player) sender;
-				if (setting == -1) {
-					instance.getServer().broadcastMessage(norm + player.getWorld().getName() + clbr);
-				} else {
-					instance.getServer().broadcastMessage(suddenShift + player.getWorld().getName() + clbr);
+				Player player = (Player) sender; // make sure we've got a player -- can't do single world from console\
+
+				if (TimeShift.settings.put(player.getWorld().getName(), setting) == null) {// make change
+					instance.scheduleTimer(player.getWorld());
 				}
-				setSettingPlayer(setting, player);
+
+				TimeShiftMessaging.sendMessage(sender, player.getWorld(), setting, false);// print result
 			} else {
-				sender.sendMessage(specWorld);
+				TimeShiftMessaging.sendError(sender, 3, "");//specify world from console error
 			}
-		}
-	}
-
-	// changes one of the worlds in memory.
-	private void setSettingPlayer(int setting, Player player) {
-		World w = instance.getServer().getWorld(player.getWorld().getName());
-		// if the previous value at key was null, the world never got a timer.
-		if (TimeShift.settings.put(w.getName(), setting) == null) {
-			instance.scheduleTimer(w);
-		}
-	}
-
-	// same, by worldname instead of by player.
-	private Boolean setSettingByName(int setting, String world) {
-		World w = this.instance.getServer().getWorld(world);
-		if (w == null) {
-			return false;
-		} else {
-			// if the previous value at key was null, the world never got a
-			// timer.
-			if (TimeShift.settings.put(w.getName(), setting) == null) {
-				instance.scheduleTimer(w);
-			}
-			return true;
 		}
 	}
 
@@ -148,19 +82,14 @@ public class TimeShiftCommandParser {
 		return true;
 	}
 
+	//check if a player has permission to use shift commands
 	public boolean checkShift(Player player) {
 		if (checkPermissions(player, cmdPerm))
 			return true;
 		return false;
 	}
-
-	private boolean checkShiftError(Player player) {
-		if (checkShift(player))
-			return false;
-		player.sendMessage(need + cmdPerm + perm);
-		return true;
-	}
-
+	
+	//check if a player has permission to use startup commands
 	public boolean checkStartup(Player player) {
 		if (checkPermissions(player, cmdStart))
 			return true;
@@ -211,19 +140,18 @@ public class TimeShiftCommandParser {
 					// if permissions isn't installed, checkPermissions returns true, so users will see "full help"
 					if (checkStartup(player) && checkShift(player)) {
 						// has both
-						player.sendMessage(use + sl + cmd + opts + sep + "startup <x>");
+						TimeShiftMessaging.sendHelp(sender, 3); //send full help
 					} else if (checkShift(player)) {
 						// has shift only
-						player.sendMessage(use + sl + cmd + opts);
+						TimeShiftMessaging.sendHelp(sender, 1); //send shift help
 					} else if (checkStartup(player)) {
 						// has startup only
-						player.sendMessage(use + sl + cmd + " startup [" + opts + clbr + " -- sets startup and " + sl + "reload behavior only.");
+						TimeShiftMessaging.sendHelp(sender, 2); //send startup help	
 					} else { // has nothing
-						player.sendMessage(need + perm);
-						System.out.println(player.getName() + " tried to use the " + cmd + " command, but does not have" + perm);
+						TimeShiftMessaging.sendError(sender, 4, ""); // send no permissions error
 					}
 				} else {
-					sender.sendMessage(use + cmd + opts + " <worlds>");
+					TimeShiftMessaging.sendHelp(sender, 0); // send console help
 				}
 				// command handled
 				return true;
@@ -243,16 +171,18 @@ public class TimeShiftCommandParser {
 				}
 			} catch (NullPointerException ex) {
 			}
-			
+
 			if (isPlayer) {
 				if (T1 == SubCommand.STARTUP) {
 					if (!checkStartup(player)) {
-						player.sendMessage(need + cmdStart + perm);
+						TimeShiftMessaging.sendError(sender, 2, ""); // send no startup permissions error
 						return true;
 					}
 				} else {
-					if (checkShiftError(player))
-						return true; // displays a "need permission" message. May be a good thing to log too... if anyone cared...
+					if (!checkShift(player)) {
+						TimeShiftMessaging.sendError(sender, 1, ""); // send no shift permissions error
+						return true;
+					}
 				}
 			}
 
@@ -279,13 +209,13 @@ public class TimeShiftCommandParser {
 				return true;
 			case STARTUP:
 				// if case is startup, check for permissions.
-//				if (!checkStartup(player)) {
-//					player.sendMessage("You need " + cmdStart + " permission.");
-//					return true;
-//				}
+				// if (!checkStartup(player)) {
+				// player.sendMessage("You need " + cmdStart + " permission.");
+				// return true;
+				// }
 				// only got the startup command
 				if (split.length == 1) {
-					sender.sendMessage("Startup " + use + sl + cmd + " startup [" + opts + "]\n" + sl + cmd + " startup day -- automatically loop day when the server\nis " + sl + "reload 'ed or restarted.");
+					TimeShiftMessaging.sendHelp(sender, 2); //send startup help	
 					return true;
 				}
 				// trying to get a string to match enum value, null if not matched

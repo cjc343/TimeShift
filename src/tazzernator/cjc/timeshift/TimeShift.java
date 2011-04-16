@@ -1,9 +1,11 @@
 package tazzernator.cjc.timeshift;
 
 //java imports
+import java.io.File;
+import java.io.FileWriter;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
-//import java.util.;
 
 //bukkit imports
 import org.bukkit.World;
@@ -15,7 +17,6 @@ import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
-//import org.bukkit.
 
 //permissions-related imports
 import com.nijikokun.bukkit.Permissions.Permissions;
@@ -35,19 +36,20 @@ public class TimeShift extends JavaPlugin {
 	final TimeShift plugin = this;
 	// public memory
 	// Strings should always use this name
-	public static String name = "TimeShift";
+	public static String name;
 	// for permissions implementation
 	static Permissions Permissions = null;
 	// store server settings in key=worldname, int setting
-	public static HashMap<String, Integer> settings = new HashMap<String, Integer>();// = new AbstractMap<String,Integer>();
+	protected static HashMap<String, Integer> settings = new HashMap<String, Integer>();// = new AbstractMap<String,Integer>();
 	// store path to TimeShift.time
 	public static String path;
 
 	// private memory
-	private int rate = 100;
+	private int rate = 20;
 	private final TimeShiftCommandParser commandParser = new TimeShiftCommandParser(this);
-	private final TimeShiftPlayerListener tspl = new TimeShiftPlayerListener(this);
+	private final TimeShiftPlayerListener tspl = new TimeShiftPlayerListener();
 	private TimeShiftServerListener tssl = new TimeShiftServerListener(this);
+	
 	// holds temporary file input
 	static ArrayList<String> data = new ArrayList<String>();
 
@@ -56,25 +58,20 @@ public class TimeShift extends JavaPlugin {
 		// stop the timers
 		getServer().getScheduler().cancelTasks(this);
 	}
-
+	
+	
 	// onEnable
-	public void onEnable() {
+	public void onEnable() {		
 		try { // all of enable
-			if (this.getDataFolder().exists()) {
-				path = this.getDataFolder().getPath() + "/" + name + ".startup";
-			} else {
-				if (this.getDataFolder().mkdirs()) {
-					path = this.getDataFolder().getPath() + "/" + name + ".startup";
-				} else {
-					System.out.println(name + " could not create necessary folder structure for settings.");
-				}
-			}
-			setupPermissions();
-			// read file
-			TimeShiftFileReaderWriter.readSettings();
-
-			// new code, even though it didn't really change much.
-			// Scheduling with thread safety now though.
+			name = this.getDescription().getName(); // set plugin name
+			
+			setupConfigFolder();//makes sure config folder exists, defines folder path.
+			
+			setupConfigFile();//makes sure config file exists, copies it over if it doesn't.
+			
+			setupPermissions();//sets up permissions
+			
+			TimeShiftFileReaderWriter.readSettings();// read startup config file
 
 			// Lets start the timers.
 			for (World w : getServer().getWorlds()) {
@@ -96,6 +93,42 @@ public class TimeShift extends JavaPlugin {
 			e.printStackTrace();
 		}
 	}
+	
+	//setup folder for config if it doesn't exist, and define path variable.
+	private void setupConfigFolder() {
+		if (this.getDataFolder().exists()) {//check that folder exists
+			path = this.getDataFolder().getPath();//set path
+		} else {//if it doesn't, make it.
+			if (this.getDataFolder().mkdirs()) {
+				path = this.getDataFolder().getPath();// + "/" + name + ".startup";
+			} else {
+				System.out.println(name + " could not create necessary folder structure for settings.");
+			}
+		}
+	}
+	
+	//setup config file if it doesn't exist.
+	private void setupConfigFile() {
+		getConfiguration().load();
+		try {//check for config file
+			File config = new File(path, "/config.yml");
+			if (!config.exists()) {//if it doesn't exist:
+				//copy it over from the jar.
+				InputStream defaultConf = getClass().getResourceAsStream("/config.yml");
+				FileWriter confWrite = new FileWriter(config);
+				for (int i = 0; (i = defaultConf.read()) > 0;) {
+					confWrite.write(i);
+				}
+				confWrite.flush();
+				confWrite.close();
+				defaultConf.close();
+				getConfiguration().load();
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		TimeShiftMessaging.setup(this);//set up messaging strings
+	}
 
     private void setupPermissions() {
     	//setup permissions
@@ -111,13 +144,13 @@ public class TimeShift extends JavaPlugin {
 	// now thread safe? I have no way of actually knowing since I had no repeatable method to test any resulting bugs before.
 	public void scheduleTimer(World w) {
 		final TimeShiftRunnable tst = new TimeShiftRunnable();
-		tst.world = w;
-
+		tst.world = w; //set timer's world
+		//schedule task
 		getServer().getScheduler().scheduleAsyncRepeatingTask(plugin, new Runnable() {
 			public void run() {
 				getServer().getScheduler().scheduleSyncDelayedTask(plugin, tst); // task, in server thread, to run asap
 			}
-		}, rate, 1); // repeating task at rate of 100, results in small lag, not checking too often? ticks / s ? supposed to be 20?
+		}, rate, rate); //about once a second?
 	}
 
 	@Override
