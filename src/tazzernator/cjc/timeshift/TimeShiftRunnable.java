@@ -26,7 +26,7 @@ import org.bukkit.World;
 public class TimeShiftRunnable implements Runnable {
 	public World world = null;
 	//public String index; // edited by cjc mar 29 to remove index variable.
-
+	//save for variable names and tick values, this class bears very little resemblance to the original AGPL code.
 	public void run() {
 		long time = world.getTime();
 		long relativeTime = time % 24000;

@@ -1,6 +1,5 @@
 package tazzernator.cjc.timeshift;
 
-import org.bukkit.event.server.PluginDisableEvent;
 import org.bukkit.event.server.PluginEnableEvent;
 import org.bukkit.event.server.ServerListener;
 import org.bukkit.plugin.Plugin;
@@ -25,18 +24,6 @@ public class TimeShiftServerListener extends ServerListener {
 					TimeShift.Permissions = (Permissions) plugin;
 					System.out.println("[" + TimeShift.name + "] hooked into " + toHook);
 				}
-			}
-		}
-	}
-
-	@Override
-	public void onPluginDisable(PluginDisableEvent event) {
-		if (TimeShift.Permissions != null) {
-			String plugin = event.getPlugin().getDescription().getName();
-
-			if (plugin.equals(toHook)) {
-				TimeShift.Permissions = null;
-				System.out.println("[" + TimeShift.name + "] un-hooked from " + toHook);
 			}
 		}
 	}

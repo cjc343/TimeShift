@@ -6,6 +6,9 @@ import java.io.FileWriter;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
+
+import javax.persistence.PersistenceException;
 
 //bukkit imports
 import org.bukkit.World;
@@ -46,9 +49,11 @@ public class TimeShift extends JavaPlugin {
 
 	// private memory
 	private int rate = 20;
-	private final TimeShiftCommandParser commandParser = new TimeShiftCommandParser(this);
+
 	private final TimeShiftPlayerListener tspl = new TimeShiftPlayerListener();
 	private TimeShiftServerListener tssl = new TimeShiftServerListener(this);
+	private TimeShiftPersistentReaderWriter tsprw = new TimeShiftPersistentReaderWriter(this);
+	private final TimeShiftCommandParser commandParser = new TimeShiftCommandParser(this, tsprw);
 	
 	// holds temporary file input
 	static ArrayList<String> data = new ArrayList<String>();
@@ -71,7 +76,9 @@ public class TimeShift extends JavaPlugin {
 			
 			setupPermissions();//sets up permissions
 			
-			TimeShiftFileReaderWriter.readSettings();// read startup config file
+			setupDatabase(); // sets up db, if not yet set up.
+			
+			tsprw.readSettings();// read from db, or from file on first use.
 
 			// Lets start the timers.
 			for (World w : getServer().getWorlds()) {
@@ -89,10 +96,26 @@ public class TimeShift extends JavaPlugin {
 			PluginDescriptionFile pdfFile = this.getDescription();
 			System.out.println(pdfFile.getName() + " version " + pdfFile.getVersion() + " is enabled!");
 		} catch (Exception e) {
-			System.out.println("Exception thrown in onEnable " + name);
+			System.out.println("[" + name + "] Exception thrown in onEnable");
 			e.printStackTrace();
 		}
 	}
+	
+	private void setupDatabase() {
+		try {
+			getDatabase().find(TimeShiftWorldSetting.class).findRowCount();
+		} catch (PersistenceException ex) {
+			System.out.println("Installing " + name + "'s database due to first time use.");
+			installDDL();
+		}
+	}
+	
+    @Override
+    public List<Class<?>> getDatabaseClasses() {
+    	List<Class<?>> list = new ArrayList<Class<?>>();
+    	list.add(TimeShiftWorldSetting.class);
+    	return list;
+    }
 	
 	//setup folder for config if it doesn't exist, and define path variable.
 	private void setupConfigFolder() {

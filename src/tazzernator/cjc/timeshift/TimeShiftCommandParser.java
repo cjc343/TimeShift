@@ -7,6 +7,7 @@ import org.bukkit.World;
 
 public class TimeShiftCommandParser {
 	private TimeShift instance;
+	private TimeShiftPersistentReaderWriter tsprw;
 	// show up in a lot of places. Actual string only shows up here. Some places still need adjustment
 	private final static String cmd = "shift";
 	private final static String time = "time";
@@ -15,8 +16,9 @@ public class TimeShiftCommandParser {
 	private final String cmdStart = time + cmd + ".startup"; // cannot cancel shifts via /shift stop commands,
 
 
-	public TimeShiftCommandParser(TimeShift instance) {
+	public TimeShiftCommandParser(TimeShift instance, TimeShiftPersistentReaderWriter tsprw) {
 		this.instance = instance;
+		this.tsprw = tsprw;
 	}
 
 	// ---------------------- setting persistent (in file) settings
@@ -25,7 +27,7 @@ public class TimeShiftCommandParser {
 			for (int i = 2; i < split.length; i++) {
 				World w = this.instance.getServer().getWorld(split[i]);// try to get a world for each worldname
 				if (w != null) {
-					TimeShiftFileReaderWriter.persistentWriter(setting, w);// world exists, write persistent setting
+					tsprw.persistentWriter(setting, w);// world exists, write persistent setting
 					TimeShiftMessaging.sendMessage(sender, w, setting, true);// print result
 				} else {
 					TimeShiftMessaging.sendError(sender, 0, split[i]); //dne error
@@ -34,7 +36,7 @@ public class TimeShiftCommandParser {
 		} else {// command on current player world
 			if (sender instanceof Player) {
 				Player player = (Player) sender;
-				TimeShiftFileReaderWriter.persistentWriter(setting, player.getWorld());
+				tsprw.persistentWriter(setting, player.getWorld());
 				TimeShiftMessaging.sendMessage(sender, player.getWorld(), setting, true);// print result
 			} else {
 				TimeShiftMessaging.sendError(sender, 3, "");//specify world from console error

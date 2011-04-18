@@ -3,6 +3,7 @@ main: tazzernator.cjc.timeshift.TimeShift
 version: 2.0
 website: http://forums.bukkit.org/posts/14655/
 author: Tazzernator and cjc (TimeShift), and feverdream (open source time logic)
+database: true
 description: >
              Allows the time to be looped on demand, or at startup, for each world.
              This plugin uses the optional Permissions nodes timeshift.startup, timeshift.shift, and timeshift.cancel
