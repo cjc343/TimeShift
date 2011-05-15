@@ -77,6 +77,10 @@ public class TimeShiftPersistentReaderWriter {
 	// write new setting to database
 	public void persistentWriter(int setting, World w) {
 		TimeShiftWorldSetting dbSetting = instance.getDatabase().find(TimeShiftWorldSetting.class).where().ieq("worldName", w.getName()).findUnique();
+		if (dbSetting == null) {
+			dbSetting = new TimeShiftWorldSetting();
+			dbSetting.setWorldName(w.getName());
+		}
 		dbSetting.setSetting(setting);
 	}
 }

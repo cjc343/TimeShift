@@ -96,6 +96,9 @@ public class TimeShiftMessaging {
 		
 	//called by sendMessage to send to proper destination
 	private static void send(String d, String msg, CommandSender cs, World w) {
+		if (msg == "") {
+			return;
+		}
 		if (d.equals("player")) {
 			cs.sendMessage(msg);//send to sender
 		} else if (d.equals("server-announce")) {
