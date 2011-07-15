@@ -7,17 +7,18 @@ import javax.persistence.Id;
 import javax.persistence.Table;
 
 @Entity()
-@Table(name="ts_world")
+@Table(name = "ts_world")
 public class TimeShiftWorldSetting {
 	@Id
 	private int id;
-	
+
 	@NotEmpty
 	private String worldName;
-	
+
 	@NotNull
 	private int setting;
 
+	// db entry id
 	public void setId(int id) {
 		this.id = id;
 	}
@@ -26,6 +27,7 @@ public class TimeShiftWorldSetting {
 		return id;
 	}
 
+	// manipulate the stored world name for a world
 	public void setWorldName(String worldName) {
 		this.worldName = worldName;
 	}
@@ -34,6 +36,7 @@ public class TimeShiftWorldSetting {
 		return worldName;
 	}
 
+	// manipulate the stored settings for a world
 	public void setSetting(int setting) {
 		this.setting = setting;
 	}

@@ -27,10 +27,16 @@ public class TimeShiftPersistentReaderWriter {
 		}
 		bufferedReader.close();
 		// returns a list of lines, each line contains settings for a world.
+		// data variable should be moved to this class
 		return TimeShift.data;
 	}
 
 	// method to take those numbers, parse them, and input them into memory
+	// this can be cut down in next release since all TimeShift.startup files should be converted already
+	//there is a bug in the conversion process (luckily it only affected a small subset of users) when the existing
+	//TimeShift.startup file contains multiple entries for a single world. This was due to a much older bug which
+	//caused duplicate entries in a small number of cases, which, when fixed, did not remove the duplicate entries.
+	//The fix is to remove the database and allow a clean one to be created.
 	public void readSettings() {
 
 		try {
@@ -66,15 +72,16 @@ public class TimeShiftPersistentReaderWriter {
 				}
 			}
 			instance.getDatabase().commitTransaction();
-		} catch (IOException e) {
+		} catch (IOException e) { // TimeShift.startup never existed or has been deleted! (All the above will disappear next release)
 			// settings file did not exist. Yay!
+			// retrieve all startup settings from db and load into memory for current behavior.
 			for (TimeShiftWorldSetting dbSetting : instance.getDatabase().find(TimeShiftWorldSetting.class).findList()) {
 				TimeShift.settings.put(dbSetting.getWorldName(), dbSetting.getSetting());
 			}
 		}
 	}
 
-	// write new setting to database
+	// write new setting to database or modify existing setting
 	public void persistentWriter(int setting, World w) {
 		TimeShiftWorldSetting dbSetting = instance.getDatabase().find(TimeShiftWorldSetting.class).where().ieq("worldName", w.getName()).findUnique();
 		if (dbSetting == null) {

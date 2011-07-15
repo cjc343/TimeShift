@@ -25,8 +25,9 @@ import org.bukkit.World;
 //modified by cjc mar 18 to potentially implement sunrise and sunset WITHOUT looking at Noon or ExtendDay code. Which means it's probably not right yet.
 public class TimeShiftRunnable implements Runnable {
 	public World world = null;
-	//public String index; // edited by cjc mar 29 to remove index variable.
-	//save for variable names and tick values, this class bears very little resemblance to the original AGPL code.
+
+	// public String index; // edited by cjc mar 29 to remove index variable.
+	// save for variable names and tick values, this class bears very little resemblance to the original AGPL code.
 	public void run() {
 		long time = world.getTime();
 		long relativeTime = time % 24000;
@@ -35,15 +36,15 @@ public class TimeShiftRunnable implements Runnable {
 		// Number is checked, and if it applies, the time is set
 		try {
 			int setting = TimeShift.settings.get(world.getName());
-			if (relativeTime > 12000 && setting == 0) {//day
+			if (relativeTime > 12000 && setting == 0) {// day
 				world.setTime(startOfDay + 24000);
-			} else if (setting == 13800 && (relativeTime > 22200 || relativeTime < 13700)) {//night
+			} else if (setting == 13800 && (relativeTime > 22200 || relativeTime < 13700)) {// night
 				world.setTime(startOfDay + 37700);
-			} else if (setting == 12000 && (relativeTime < 12000 || relativeTime > 13700)) {//sunset
+			} else if (setting == 12000 && (relativeTime < 12000 || relativeTime > 13700)) {// sunset
 				world.setTime(startOfDay + 36000);
-			} else if (setting == 22000 && relativeTime < 22000) {//sunrise
+			} else if (setting == 22000 && relativeTime < 22000) {// sunrise
 				world.setTime(startOfDay + 46000);
-			} else if (setting == -2) {//riseset/setrise
+			} else if (setting == -2) {// riseset/setrise
 				if (relativeTime < 12000) {
 					world.setTime(startOfDay + 36000);
 				} else if (relativeTime > 13700 && relativeTime < 22000) {
