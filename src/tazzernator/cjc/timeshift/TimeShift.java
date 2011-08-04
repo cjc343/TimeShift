@@ -52,6 +52,8 @@ public class TimeShift extends JavaPlugin {
 	// rate in 'ticks' between poll for current time
 	private int rate = 20;
 
+	
+	private TimeShiftWorldListener tswl = new TimeShiftWorldListener(this);
 	// Listens for use of "time [x]" commands
 	private final TimeShiftPlayerListener tspl = new TimeShiftPlayerListener();
 	// Listens for activation of Permissions plugin
@@ -96,6 +98,8 @@ public class TimeShift extends JavaPlugin {
 			// the preprocess event only controls /time, nothing else. It attempts to use any /time commands to cancel an active shift
 			// without disrupting the command used.
 			PluginManager pm = getServer().getPluginManager();
+			
+			pm.registerEvent(Event.Type.WORLD_LOAD, tswl, Priority.Lowest, this);
 			// Register a command preprocess event: runs before commands are processed
 			pm.registerEvent(Event.Type.PLAYER_COMMAND_PREPROCESS, tspl, Priority.Low, this);
 			// Listen for Permissions enable
@@ -183,6 +187,7 @@ public class TimeShift extends JavaPlugin {
 	public void scheduleTimer(World w) {
 		final TimeShiftRunnable tst = new TimeShiftRunnable();
 		tst.world = w; // set timer's world
+		//System.out.println("TimeShift is starting a timer for world: " + w.getName());
 		// schedule task
 		getServer().getScheduler().scheduleAsyncRepeatingTask(plugin, new Runnable() {
 			public void run() {
@@ -199,6 +204,7 @@ public class TimeShift extends JavaPlugin {
 		// this doesn't intercept the /time command, just the /shift commands.
 		// (right now, someone could have changed that) /time is handled by player events still
 
+		//System.out.println("TimeShift received a registered command (presumably /shift) and will now try to execute it.");
 		// this should be done as a CommandExecutor in onEnable instead.
 		return commandParser.handleCommand(sender, command, commandLabel, args);
 	}

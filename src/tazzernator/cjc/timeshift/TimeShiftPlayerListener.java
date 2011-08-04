@@ -20,6 +20,7 @@ public class TimeShiftPlayerListener extends PlayerListener {
 	@Override
 	public void onPlayerCommandPreprocess(PlayerCommandPreprocessEvent event) {
 		if (event.getMessage().startsWith("/time ")) {// does not catch just /time, catches /time [arg]
+			System.out.println("TimeShift has received a /time command which will probably cancel a shift");
 			if (event.getMessage().startsWith("help", 6)) {
 				return; // doesn't catch /time help
 			}

@@ -23,6 +23,7 @@ public class TimeShiftCommandParser {
 	// ---------------------- setting persistent (in db) settings
 	// this method parses single world or multi world commands that set the persistent startup state for a world
 	private void setPersist(int setting, CommandSender sender, String[] split) {
+		//System.out.println("TimeShift is parsing a persistent state command");
 		if (split.length > 2) { // split length > 2, multi-world command (world names listed after command)
 			for (int i = 2; i < split.length; i++) { // for each world listed
 				World w = this.instance.getServer().getWorld(split[i]);// try to get a world for each worldname
@@ -48,6 +49,7 @@ public class TimeShiftCommandParser {
 	// this method parses single world or multi world commands that set the current state for a world
 	// possible change: enum for states and remove all magic numbers, also, enum for errors+others in Messaging?
 	private void setSetting(int setting, CommandSender sender, String[] split) {
+		//System.out.println("TimeShift is parsing a current state command");
 		if (split.length > 1) {// multi world
 			for (int i = 1; i < split.length; i++) { // for each world listed
 				World w = this.instance.getServer().getWorld(split[i]);

@@ -36,22 +36,35 @@ public class TimeShiftRunnable implements Runnable {
 		// Number is checked, and if it applies, the time is set
 		try {
 			int setting = TimeShift.settings.get(world.getName());
+			//System.out.print("Checking time for " + world.getName() + " ... ");
 			if (relativeTime > 12000 && setting == 0) {// day
 				world.setTime(startOfDay + 24000);
+			//	System.out.println("Matched day, time set.");
+				return;
 			} else if (setting == 13800 && (relativeTime > 22200 || relativeTime < 13700)) {// night
 				world.setTime(startOfDay + 37700);
+			//	System.out.println("Matched night, time set.");
+				return;
 			} else if (setting == 12000 && (relativeTime < 12000 || relativeTime > 13700)) {// sunset
 				world.setTime(startOfDay + 36000);
+			//	System.out.println("Matched sunset, time set.");
+				return;
 			} else if (setting == 22000 && relativeTime < 22000) {// sunrise
 				world.setTime(startOfDay + 46000);
+			//	System.out.println("Matched sunrise, time set.");
+				return;
 			} else if (setting == -2) {// riseset/setrise
+			//	System.out.println("Matched riseset, time set.");
 				if (relativeTime < 12000) {
 					world.setTime(startOfDay + 36000);
 				} else if (relativeTime > 13700 && relativeTime < 22000) {
 					world.setTime(startOfDay + 46000);
 				}
+				return;
 			}
+		//	System.out.println("No matches, time OK! Setting is " + setting + " and relative time is " + relativeTime);
 		} catch (Exception e) {
+		//	System.out.println("Exception Encountered in Runnable");
 			TimeShift.settings.put(world.getName(), -1);
 		}
 	}
