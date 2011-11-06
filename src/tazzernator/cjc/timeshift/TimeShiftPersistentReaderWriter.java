@@ -89,5 +89,6 @@ public class TimeShiftPersistentReaderWriter {
 			dbSetting.setWorldName(w.getName());
 		}
 		dbSetting.setSetting(setting);
+		instance.getDatabase().save(dbSetting);
 	}
 }

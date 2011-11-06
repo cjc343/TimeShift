@@ -6,10 +6,10 @@ import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import org.bukkit.event.player.PlayerListener;
 
 public class TimeShiftPlayerListener extends PlayerListener {
-	// private TimeShift plugin;
+	 private TimeShift instance;
 
-	public TimeShiftPlayerListener() {
-		// this.plugin = instance;
+	public TimeShiftPlayerListener(TimeShift instance) {
+		 this.instance = instance;
 	}
 
 	// handles /time command only in order to 'peacefully' use it
@@ -27,17 +27,18 @@ public class TimeShiftPlayerListener extends PlayerListener {
 			Player player = event.getPlayer();
 			// time command cancels an active shift only
 			// check for permission to (cancel a) shift
-			if (TimeShift.Permissions != null) {
-				if (!TimeShift.Permissions.getHandler().has(player, TimeShiftCommandParser.cmdPerm) && !TimeShift.Permissions.getHandler().has(player, TimeShiftCommandParser.cmdCancel)) {
+//			if (TimeShift.Permissions != null) {
+				if (!player.hasPermission(TimeShiftCommandParser.cmdPerm) && !player.hasPermission(TimeShiftCommandParser.cmdCancel)) {
 					return;
 				}
-			}
+//			}
+		
 			World w = player.getWorld();
 			try {
 				// TST should fix before it is ever an issue?
 				if (TimeShift.settings.get(w.getName()) != -1) { // check if a 'shift' is active
 					TimeShift.settings.put(player.getWorld().getName(), -1); // if so, cancel it
-					TimeShiftMessaging.sendMessage(player, player.getWorld(), -1, false);// print result
+					instance.tsm.sendMessage(player, player.getWorld(), -1, false);// print result
 				}
 			} catch (ArrayIndexOutOfBoundsException e) {
 				System.out.println(TimeShift.name + " had a minor error with the /time command. Please report.");

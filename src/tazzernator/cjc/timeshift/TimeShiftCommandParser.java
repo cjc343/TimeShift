@@ -29,18 +29,18 @@ public class TimeShiftCommandParser {
 				World w = this.instance.getServer().getWorld(split[i]);// try to get a world for each worldname
 				if (w != null) { // if a world by that name exists
 					tsprw.persistentWriter(setting, w);// world exists, write persistent setting
-					TimeShiftMessaging.sendMessage(sender, w, setting, true);// print result
+					instance.tsm.sendMessage(sender, w, setting, true);// print result
 				} else {
-					TimeShiftMessaging.sendError(sender, 0, split[i]); // dne error
+					instance.tsm.sendError(sender, 0, split[i]); // dne error
 				}
 			}
 		} else {// command on current player world (no names listed)
 			if (sender instanceof Player) {
 				Player player = (Player) sender; // cast player in order to get player's current world
 				tsprw.persistentWriter(setting, player.getWorld()); // write setting for player's world
-				TimeShiftMessaging.sendMessage(sender, player.getWorld(), setting, true);// print result
+				instance.tsm.sendMessage(sender, player.getWorld(), setting, true);// print result
 			} else { // sender not a player (console) and must specify worldname(s)
-				TimeShiftMessaging.sendError(sender, 3, "");// specify world from console error
+				instance.tsm.sendError(sender, 3, "");// specify world from console error
 			}
 		}
 	}
@@ -57,9 +57,9 @@ public class TimeShiftCommandParser {
 					if (TimeShift.settings.put(w.getName(), setting) == null) { // set new setting, and if there was no previous setting:
 						instance.scheduleTimer(w); // schedule a new timer if no previous setting
 					}
-					TimeShiftMessaging.sendMessage(sender, w, setting, false);// print result
+					instance.tsm.sendMessage(sender, w, setting, false);// print result
 				} else { // world doesn't exist
-					TimeShiftMessaging.sendError(sender, 0, split[i]); // dne error
+					instance.tsm.sendError(sender, 0, split[i]); // dne error
 				}
 			}
 		} else {// single world, based on player info
@@ -68,9 +68,9 @@ public class TimeShiftCommandParser {
 				if (TimeShift.settings.put(player.getWorld().getName(), setting) == null) {// make change
 					instance.scheduleTimer(player.getWorld());
 				}
-				TimeShiftMessaging.sendMessage(sender, player.getWorld(), setting, false);// print result
+				instance.tsm.sendMessage(sender, player.getWorld(), setting, false);// print result
 			} else { // console, not player
-				TimeShiftMessaging.sendError(sender, 3, "");// specify world from console error
+				instance.tsm.sendError(sender, 3, "");// specify world from console error
 			}
 		}
 	}
@@ -78,26 +78,18 @@ public class TimeShiftCommandParser {
 	// checks if a player has permission to use a given permission node.
 	// permission nodes are defined for player groups in the Permissions plugin configuration.
 	// this method is designed to return true if Permissions is not installed on the server.
-	public boolean checkPermissions(Player p, String permission) {
-		if (TimeShift.Permissions != null) { // if permissions are defined
-			if (!TimeShift.Permissions.getHandler().has(p, permission)) { // and player has no permission
-				return false;
-			}
-		}
-		// Permissions not defined, or player has permission
-		return true;
-	}
+//removed when new permission methods made it unnecessary...
 
 	// check if a player has permission to use shift commands
 	public boolean checkShift(Player player) {
-		if (checkPermissions(player, cmdPerm))
+		if (player.hasPermission(cmdPerm))
 			return true;
 		return false;
 	}
 
 	// check if a player has permission to use startup commands
 	public boolean checkStartup(Player player) {
-		if (checkPermissions(player, cmdStart))
+		if (player.hasPermission(cmdStart))
 			return true;
 		return false;
 	}
@@ -147,18 +139,18 @@ public class TimeShiftCommandParser {
 					// this can be optimized
 					if (checkStartup(player) && checkShift(player)) {
 						// has both
-						TimeShiftMessaging.sendHelp(sender, 3); // send full help
+						instance.tsm.sendHelp(sender, 3); // send full help
 					} else if (checkShift(player)) {
 						// has shift only
-						TimeShiftMessaging.sendHelp(sender, 1); // send shift help
+						instance.tsm.sendHelp(sender, 1); // send shift help
 					} else if (checkStartup(player)) {
 						// has startup only
-						TimeShiftMessaging.sendHelp(sender, 2); // send startup help
+						instance.tsm.sendHelp(sender, 2); // send startup help
 					} else { // has nothing
-						TimeShiftMessaging.sendError(sender, 4, ""); // send no permissions error
+						instance.tsm.sendError(sender, 4, ""); // send no permissions error
 					}
 				} else { // not a player (console)
-					TimeShiftMessaging.sendHelp(sender, 0); // send console help
+					instance.tsm.sendHelp(sender, 0); // send console help
 				}
 				// command handled
 				return true;
@@ -182,12 +174,12 @@ public class TimeShiftCommandParser {
 			if (isPlayer) {
 				if (T1 == SubCommand.STARTUP) {// player wants to change startup settings, check startup permission
 					if (!checkStartup(player)) {
-						TimeShiftMessaging.sendError(sender, 2, ""); // send no startup permissions error
+						instance.tsm.sendError(sender, 2, ""); // send no startup permissions error
 						return true;
 					}
 				} else {// player is not changing startup settings, check general permission
 					if (!checkShift(player)) {
-						TimeShiftMessaging.sendError(sender, 1, ""); // send no shift permissions error
+						instance.tsm.sendError(sender, 1, ""); // send no shift permissions error
 						return true;
 					}
 				}
@@ -218,7 +210,7 @@ public class TimeShiftCommandParser {
 				// permissions already checked
 				// only got the startup command, send help
 				if (split.length == 1) {
-					TimeShiftMessaging.sendHelp(sender, 2); // send startup help
+					instance.tsm.sendHelp(sender, 2); // send startup help
 					return true;
 				}
 				// match 2nd argument to possible arguments enum

@@ -17,13 +17,11 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.event.Event.Priority;
 import org.bukkit.event.Event;
-import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
-//permissions import
-import com.nijikokun.bukkit.Permissions.Permissions;
+
 
 /**
  * TimeShift for bukkit
@@ -44,20 +42,21 @@ public class TimeShift extends JavaPlugin {
 	public static String name;
 	// store path to configuration files
 	public static String path;
+	
+
 
 	// for permissions implementation
-	static Permissions Permissions = null;
+
 	// store server settings in key=worldname, int setting
 	protected static HashMap<String, Integer> settings = new HashMap<String, Integer>();// = new AbstractMap<String,Integer>();
 	// rate in 'ticks' between poll for current time
 	private int rate = 20;
 
+	protected TimeShiftMessaging tsm;
 	
 	private TimeShiftWorldListener tswl = new TimeShiftWorldListener(this);
 	// Listens for use of "time [x]" commands
-	private final TimeShiftPlayerListener tspl = new TimeShiftPlayerListener();
-	// Listens for activation of Permissions plugin
-	private TimeShiftServerListener tssl = new TimeShiftServerListener(this);
+	private final TimeShiftPlayerListener tspl = new TimeShiftPlayerListener(this);
 	// All IO
 	private TimeShiftPersistentReaderWriter tsprw = new TimeShiftPersistentReaderWriter(this);
 	// Parses "shift" commands
@@ -103,9 +102,9 @@ public class TimeShift extends JavaPlugin {
 			// Register a command preprocess event: runs before commands are processed
 			pm.registerEvent(Event.Type.PLAYER_COMMAND_PREPROCESS, tspl, Priority.Low, this);
 			// Listen for Permissions enable
-			pm.registerEvent(Event.Type.PLUGIN_ENABLE, tssl, Priority.Low, this);
 			// Here we just output some info so we can check all is well
 			PluginDescriptionFile pdfFile = this.getDescription();
+			
 			System.out.println(pdfFile.getName() + " version " + pdfFile.getVersion() + " is enabled!");
 		} catch (Exception e) {
 			System.out.println("[" + name + "] Exception thrown in onEnable");
@@ -146,10 +145,9 @@ public class TimeShift extends JavaPlugin {
 	}
 
 	// setup config file if it doesn't exist.
-	// this class checks for the existence of the localization and configuration file
+	// this method checks for the existence of the localization and configuration file
 	// it copies in defaults if it doesn't exist.
 	private void setupConfigFile() {
-		getConfiguration().load(); // move to end
 		try {// check for config file
 			File config = new File(path, "/config.yml");
 			if (!config.exists()) {// if it doesn't exist:
@@ -162,24 +160,17 @@ public class TimeShift extends JavaPlugin {
 				confWrite.flush();
 				confWrite.close();
 				defaultConf.close();
-				getConfiguration().load(); // move to end
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		TimeShiftMessaging.setup(this);// set up messaging strings now that config file is loaded
+		tsm = new TimeShiftMessaging(this);// set up messaging strings now that config file is loaded
 	}
 
 	// this method will hook into the Permissions plugin if Permissions is loaded before TimeShift
 	private void setupPermissions() {
 		// setup permissions
-		Plugin plugin = this.getServer().getPluginManager().getPlugin("Permissions");
-		if (TimeShift.Permissions == null) { // not yet set up
-			if (plugin != null) { // Permissions plugin is present
-				TimeShift.Permissions = (Permissions) plugin;
-				System.out.println("[" + TimeShift.name + "] hooked into Permissions.");
-			}
-		}
+// TODO
 	}
 
 	// This should be reduced to a single repeating Sync task
