@@ -2,10 +2,13 @@ package tazzernator.cjc.timeshift;
 
 import org.bukkit.World;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
+import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
-import org.bukkit.event.player.PlayerListener;
 
-public class TimeShiftPlayerListener extends PlayerListener {
+
+public class TimeShiftPlayerListener implements Listener {
 	 private TimeShift instance;
 
 	public TimeShiftPlayerListener(TimeShift instance) {
@@ -17,7 +20,7 @@ public class TimeShiftPlayerListener extends PlayerListener {
 	// Help for time should not cancel a shift. Other cases may exist which should not cancel, but
 	// it isn't possible to check every plugin's implementation of the time command since it is quite common
 	// and varies in usage. Shifts must be canceled for the time command to be effective in another plugin.
-	@Override
+	@EventHandler(priority = EventPriority.LOW)
 	public void onPlayerCommandPreprocess(PlayerCommandPreprocessEvent event) {
 		if (event.getMessage().startsWith("/time ")) {// does not catch just /time, catches /time [arg]
 			System.out.println("TimeShift has received a /time command which will probably cancel a shift");

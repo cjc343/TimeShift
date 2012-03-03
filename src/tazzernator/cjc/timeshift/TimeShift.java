@@ -15,10 +15,7 @@ import javax.persistence.PersistenceException;
 import org.bukkit.World;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
-import org.bukkit.event.Event.Priority;
-import org.bukkit.event.Event;
 import org.bukkit.plugin.PluginDescriptionFile;
-import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
 
@@ -54,9 +51,6 @@ public class TimeShift extends JavaPlugin {
 
 	protected TimeShiftMessaging tsm;
 	
-	private TimeShiftWorldListener tswl = new TimeShiftWorldListener(this);
-	// Listens for use of "time [x]" commands
-	private final TimeShiftPlayerListener tspl = new TimeShiftPlayerListener(this);
 	// All IO
 	private TimeShiftPersistentReaderWriter tsprw = new TimeShiftPersistentReaderWriter(this);
 	// Parses "shift" commands
@@ -82,8 +76,6 @@ public class TimeShift extends JavaPlugin {
 
 			setupConfigFile();// makes sure config file exists, copies in default if it doesn't.
 
-			setupPermissions();// sets up permissions if Permissions plugin is present
-
 			setupDatabase(); // sets up db, if not yet set up.
 
 			tsprw.readSettings();// read startup settings from db, or from file on first use of db version.
@@ -96,11 +88,10 @@ public class TimeShift extends JavaPlugin {
 			// Register events
 			// the preprocess event only controls /time, nothing else. It attempts to use any /time commands to cancel an active shift
 			// without disrupting the command used.
-			PluginManager pm = getServer().getPluginManager();
 			
-			pm.registerEvent(Event.Type.WORLD_LOAD, tswl, Priority.Lowest, this);
+			getServer().getPluginManager().registerEvents(new TimeShiftWorldListener(this), this);
 			// Register a command preprocess event: runs before commands are processed
-			pm.registerEvent(Event.Type.PLAYER_COMMAND_PREPROCESS, tspl, Priority.Low, this);
+			getServer().getPluginManager().registerEvents(new TimeShiftPlayerListener(this), this);
 			// Listen for Permissions enable
 			// Here we just output some info so we can check all is well
 			PluginDescriptionFile pdfFile = this.getDescription();
@@ -165,12 +156,6 @@ public class TimeShift extends JavaPlugin {
 			e.printStackTrace();
 		}
 		tsm = new TimeShiftMessaging(this);// set up messaging strings now that config file is loaded
-	}
-
-	// this method will hook into the Permissions plugin if Permissions is loaded before TimeShift
-	private void setupPermissions() {
-		// setup permissions
-// TODO
 	}
 
 	// This should be reduced to a single repeating Sync task

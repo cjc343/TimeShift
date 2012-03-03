@@ -1,6 +1,6 @@
 name: TimeShift
 main: tazzernator.cjc.timeshift.TimeShift
-version: 2.1
+version: 2.2
 website: http://forums.bukkit.org/posts/14655/
 author: Tazzernator and cjc (TimeShift), and feverdream (open source time logic)
 database: true
@@ -20,7 +20,7 @@ commands:
            /<command> setrise - loops sunrise and sunset.
            /<command> startup [state] - sets world startup behavior.
            /time [anything] - cancels active shifts.
-           Example: /<command> startup day - sets world to loop day on startup (or /reload).
+           Example: /<command> startup day - sets world to loop day on        startup (or /reload, which you shouldn't use).
            Example: /<command> night - sets world to loop night.
 permissions:
   timeshift.shift:
