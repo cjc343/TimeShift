@@ -1,3 +1,6 @@
+# Thanks to RasCas for the translation. Danke RasCas.
+# This version is only partially translated because I made major changes to the file right after RasCas translated it.
+# I started to translate commands as an example.
 # The full version of this config has helpful comments describing the options. 
 # If your config file has been migrated from an older version, it may only include these comments.
 configuration:
@@ -14,37 +17,42 @@ strings:
 # Customizable strings and destinations.
 # Valid destinations are 'server-announce', 'world-announce', and 'player'
   shift:
-    string: 'The time suddenly shifts on [%world]'
+    string: 'Die Zeit auf der Welt: [%world] hat sich plötzlich verändert.'
     destination: server-announce
   cancel:
-    string: 'The time appears to be back to normal on [%world]'
+    string: 'Die Zeit auf Welt: [%world] scheint wieder normal zu verlaufen.'
     destination: server-announce
   startup:
     shift:
-      string: 'World [%world] will loop %setting on startup'
+      string: 'Die Welt: [%world] ist nach einem Neustart in einer %setting - Zeitschleife
+        gefangen'
       destination: player
     cancel:
-      string: 'World [%world] will not loop on startup'
+      string: 'Welt: [%world] wird nach dem Neustart nicht mehr in einer Zeitschleife
+        gefangen sein'
       destination: player
   errors:
+  errors:
     error-logging: true
-    dne: 'The world [%world] does not exist'
-    shift-permission: 'You need timeshift.shift permission.'
-    startup-permission: 'You need timeshift.startup permission.'
+    dne: 'Die Welt: [%world] existiert nicht!'
+    shift-permission: 'Um dies zu tun benötigst Du das Zugriffsrecht: timeshift.shift'
+    startup-permission: 'Um dies zu tun benötigst Du das Zugriffsrecht: timeshift.startup'
+    console-specify: 'Du musst eine Welt angeben, wenn Du die Console benutzt.'
+    no-perm: 'Du hast leider keinen Zugriff auf die TimeShift Kommandos.'
     stop-permission: 'You need timeshift.cancel permission.'
-    console-specify: 'You need to specify a world when using the console.'
-    no-perm: 'You do not have permission to use shift commands.'
   help:
-    console: 'Usage: shift <day | night | stop | sunrise | sunset | setrise> <world(s)>'
-    shift-only: 'Usage: /shift <day | night | stop | sunrise | sunset | setrise>'
-    startup-only: 'Usage: /shift startup <day | night | stop | sunrise | sunset | setrise> -- sets startup and /reload behavior only'
-    shift-startup: 'Usage: /shift <day | night | stop | sunrise | sunset | setrise | startup [option]>'
+    console: 'Anwendung: shift <Tag | Nacht | stop | sunrise | sunset | setrise> <world(s)>'
+    shift-only: 'Anwendung: /shift <Tag | Nacht | stop | sunrise | sunset | setrise>'
+    startup-only: 'Anwendung: /shift startup <Tag | Nacht | stop | sunrise | sunset
+      | setrise> -- sets startup and /reload behavior only'
+    shift-startup: 'Anwendung: /shift <Tag | Nacht | stop | sunrise | sunset | setrise
+      | startup [option]>'
 commands:
 # A basic definition. You can add your own, or adjust the ranges, but these should provide some nice defaults.
-  day:
+  Tag:
   # Synonyms. Capitalization doesn't matter.
     aliases:
-      - d
+      - day
     # Most common type, if you forget this, it'll be assumed, but you'll get a notice about it on startup.
     type: loop
     times:
@@ -52,9 +60,9 @@ commands:
     # The times below may give you some hint as to when 
       - 450 # Time to loop from
       - 11449 # Time to loop to
-  night:
+  Nacht:
     aliases:
-      - n
+      - night
     type: loop
     times:
       - 14100

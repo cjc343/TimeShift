@@ -7,12 +7,13 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 
+import tazzernator.cjc.timeshift.settings.WorldSetting;
 
 public class TimeShiftPlayerListener implements Listener {
-	 private TimeShift instance;
+	private TimeShift plugin;
 
 	public TimeShiftPlayerListener(TimeShift instance) {
-		 this.instance = instance;
+		this.plugin = instance;
 	}
 
 	// handles /time command only in order to 'peacefully' use it
@@ -23,30 +24,26 @@ public class TimeShiftPlayerListener implements Listener {
 	@EventHandler(priority = EventPriority.LOW)
 	public void onPlayerCommandPreprocess(PlayerCommandPreprocessEvent event) {
 		if (event.getMessage().startsWith("/time ")) {// does not catch just /time, catches /time [arg]
-			System.out.println("TimeShift has received a /time command which will probably cancel a shift");
 			if (event.getMessage().startsWith("help", 6)) {
 				return; // doesn't catch /time help
 			}
 			Player player = event.getPlayer();
 			// time command cancels an active shift only
 			// check for permission to (cancel a) shift
-//			if (TimeShift.Permissions != null) {
-				if (!player.hasPermission(TimeShiftCommandParser.cmdPerm) && !player.hasPermission(TimeShiftCommandParser.cmdCancel)) {
-					return;
-				}
-//			}
-		
-			World w = player.getWorld();
-			try {
-				// TST should fix before it is ever an issue?
-				if (TimeShift.settings.get(w.getName()) != -1) { // check if a 'shift' is active
-					TimeShift.settings.put(player.getWorld().getName(), -1); // if so, cancel it
-					instance.tsm.sendMessage(player, player.getWorld(), -1, false);// print result
-				}
-			} catch (ArrayIndexOutOfBoundsException e) {
-				System.out.println(TimeShift.name + " had a minor error with the /time command. Please report.");
+			if (!player.hasPermission("timeshift.cancel")) {
+				return;
 			}
-			// don't catch time commands?
+
+			World w = player.getWorld();
+
+			// TST should fix before it is ever an issue?
+			WorldSetting setting = TimeShift.world_settings.get(w.getName());
+			if (setting != null && setting.getTid() != -1) { // check if a 'shift' is active
+				plugin.cancelShift(setting);
+				String wname = player.getWorld().getName();
+				TimeShift.world_settings.put(wname, setting);
+				plugin.tsm.sendMessage(player, wname, "", false);// print result
+			}
 			return;
 		}
 	}

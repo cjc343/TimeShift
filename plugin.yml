@@ -1,6 +1,6 @@
 name: TimeShift
 main: tazzernator.cjc.timeshift.TimeShift
-version: 2.2
+version: 3.0
 website: http://forums.bukkit.org/posts/14655/
 author: Tazzernator and cjc (TimeShift), and feverdream (open source time logic)
 database: true
@@ -9,8 +9,10 @@ description: >
              This plugin uses the optional Permissions nodes timeshift.startup, timeshift.shift, and timeshift.cancel
 commands:
   shift:
+    aliases: tshift
     description: Changes time behavior.
     usage: |
+           Default Commands:
            /<command> - displays permission specific help.
            /<command> day - loops day.
            /<command> night - loops night.

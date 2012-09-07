@@ -6,6 +6,8 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
+// This is being @deprecated but still exists to transfer old user data first.
+@Deprecated
 @Entity()
 @Table(name = "ts_world")
 public class TimeShiftWorldSetting {
@@ -28,19 +30,21 @@ public class TimeShiftWorldSetting {
 	}
 
 	// manipulate the stored world name for a world
+	@Deprecated
 	public void setWorldName(String worldName) {
 		this.worldName = worldName;
 	}
-
+	@Deprecated
 	public String getWorldName() {
 		return worldName;
 	}
 
 	// manipulate the stored settings for a world
+	@Deprecated
 	public void setSetting(int setting) {
 		this.setting = setting;
 	}
-
+	@Deprecated
 	public int getSetting() {
 		return setting;
 	}
